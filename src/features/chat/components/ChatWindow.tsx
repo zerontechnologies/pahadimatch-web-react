@@ -12,10 +12,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn, formatTimeAgo, getInitials } from '@/lib/utils';
 import { useGetChatMessagesQuery, useSendMessageMutation, useMarkMessagesAsReadMutation, useGetChatListQuery } from '@/store/api/chatApi';
+import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectCurrentUser } from '@/store/slices/authSlice';
 import { addToast } from '@/store/slices/uiSlice';
 import type { Chat } from '@/types';
+
+// Predefined messages for non-subscribed users
+const PREDEFINED_MESSAGES = [
+  "Hi! I liked your profile.",
+  "Hello! Would you like to connect?",
+  "Hi there! I'm interested in knowing more about you.",
+  "Hello! I think we could be a good match.",
+  "Hi! Would you like to chat?",
+];
 
 interface ChatWindowProps {
   chat: Chat;
@@ -27,6 +37,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectCurrentUser);
   const [message, setMessage] = useState('');
+  const [showPredefinedMessages, setShowPredefinedMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Check if this is a connection chat (no real chat ID yet)
@@ -40,6 +51,19 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   const { refetch: refetchChatList } = useGetChatListQuery();
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
   const [markAsRead] = useMarkMessagesAsReadMutation();
+  const { data: membership, isLoading: isLoadingMembership } = useGetMembershipSummaryQuery();
+  
+  // Check if user can send custom messages
+  // Premium users can send custom messages to any chat they can see
+  // The backend will validate permissions (connection, membership, etc.)
+  const isPremium = membership?.data?.isPremium || false;
+  // If user has premium membership, allow custom messages
+  // Having a chat (realChatId) or connection chat means they can see this conversation
+  // The backend API will handle permission validation when sending
+  const hasChat = !!realChatId || isConnectionChat;
+  // Premium users with any chat can send custom messages
+  // Non-premium users must use predefined messages
+  const canSendCustomMessages = isPremium && hasChat;
 
   const messages = data?.data || [];
 
@@ -55,16 +79,29 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
     }
   }, [chat.id, chat.unreadCount, markAsRead, isConnectionChat, realChatId]);
 
-  const handleSend = async () => {
-    if (!message.trim()) return;
+  const handleSend = async (predefinedMessage?: string) => {
+    const messageToSend = predefinedMessage || message.trim();
+    if (!messageToSend) return;
+
+    // If not premium and trying to send custom message, show error
+    if (!canSendCustomMessages && !predefinedMessage) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Premium Required',
+        message: 'Upgrade to premium to send custom messages. Use predefined messages instead.',
+      }));
+      setShowPredefinedMessages(true);
+      return;
+    }
 
     try {
       const result = await sendMessage({
         profileId: chat.participant.profileId,
-        data: { content: message.trim() }
+        data: { content: messageToSend }
       }).unwrap();
       
       setMessage('');
+      setShowPredefinedMessages(false);
       
       // If this was a connection chat, refresh chat list to get the new chat
       if (isConnectionChat) {
@@ -99,7 +136,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && canSendCustomMessages) {
       e.preventDefault();
       handleSend();
     }
@@ -124,7 +161,9 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
           </Avatar>
           <div>
             <h3 className="font-semibold text-text">
-              {chat.participant.firstName || ''} {chat.participant.lastName || 'Unknown'}
+              {chat.participant.hasViewedContact && chat.participant.firstName && chat.participant.lastName
+                ? `${chat.participant.firstName} ${chat.participant.lastName}`
+                : chat.participant.lastName || chat.participant.profileId}
             </h3>
             <p className="text-xs text-text-muted">
               {chat.participant.isOnline ? (
@@ -222,30 +261,89 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
         </div>
       </ScrollArea>
 
+      {/* Predefined Messages (for non-premium users) */}
+      {!canSendCustomMessages && showPredefinedMessages && (
+        <div className="p-4 border-t border-border bg-champagne/30">
+          <div className="space-y-2">
+            <p className="text-xs text-text-muted mb-2">Select a predefined message:</p>
+            <div className="flex flex-wrap gap-2">
+              {PREDEFINED_MESSAGES.map((msg, idx) => (
+                <Button
+                  key={idx}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleSend(msg)}
+                  disabled={isSending}
+                  className="text-xs"
+                >
+                  {msg}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPredefinedMessages(false)}
+              className="text-xs text-text-muted"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-4 border-t border-border bg-surface">
-        <div className="flex items-end gap-2">
-          <Button variant="ghost" size="icon" className="flex-shrink-0">
-            <Smile className="w-5 h-5 text-text-muted" />
-          </Button>
-          <div className="flex-1">
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
-              rows={1}
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-champagne/50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-200 max-h-32"
-              style={{ minHeight: '44px' }}
-            />
+        {!canSendCustomMessages && !showPredefinedMessages && (
+          <div className="mb-2 p-2 rounded-lg bg-warning/10 border border-warning/20">
+            <p className="text-xs text-text-secondary text-center">
+              Upgrade to premium to send custom messages. 
+              <button
+                onClick={() => setShowPredefinedMessages(true)}
+                className="ml-1 text-primary hover:underline font-medium"
+              >
+                Use predefined messages
+              </button>
+            </p>
           </div>
-          <Button
-            onClick={handleSend}
-            disabled={!message.trim() || isSending}
-            className="flex-shrink-0"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+        )}
+        <div className="flex items-end gap-2">
+          {canSendCustomMessages && (
+            <Button variant="ghost" size="icon" className="flex-shrink-0">
+              <Smile className="w-5 h-5 text-text-muted" />
+            </Button>
+          )}
+          {canSendCustomMessages ? (
+            <div className="flex-1">
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message..."
+                rows={1}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-champagne/50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-200 max-h-32"
+                style={{ minHeight: '44px' }}
+              />
+            </div>
+          ) : (
+            <div className="flex-1">
+              <button
+                onClick={() => setShowPredefinedMessages(true)}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-champagne/50 text-sm text-text-muted text-left"
+              >
+                Select a predefined message...
+              </button>
+            </div>
+          )}
+          {canSendCustomMessages && (
+            <Button
+              onClick={() => handleSend()}
+              disabled={!message.trim() || isSending}
+              className="flex-shrink-0"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

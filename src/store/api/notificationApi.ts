@@ -22,6 +22,8 @@ export const notificationApi = apiSlice.injectEndpoints({
     getNotificationUnreadCount: builder.query<ApiResponse<{ unreadCount: number }>, void>({
       query: () => '/notifications/unread-count',
       providesTags: ['Notifications'],
+      // Poll every 30 seconds to keep count updated
+      pollingInterval: 30000,
     }),
     
     // Mark as Read

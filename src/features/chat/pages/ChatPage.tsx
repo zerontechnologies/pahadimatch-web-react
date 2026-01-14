@@ -51,10 +51,12 @@ export function ChatPage() {
         id: `connection-${conn.profileId}`,
         participant: {
           profileId: conn.profileId,
-          firstName: undefined,
-          lastName: conn.lastName,
+          firstName: undefined, // Only if hasViewedContact
+          lastName: conn.lastName, // Connected users show lastName
           profilePhoto: conn.profilePhoto,
           isOnline: false,
+          hasViewedContact: false, // Will be updated from API if available
+          isConnected: true, // Connection means interest is accepted
         },
         lastMessage: {
           content: 'Start a conversation...',

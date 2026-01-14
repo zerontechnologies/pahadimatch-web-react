@@ -38,7 +38,8 @@ export interface SearchResultProfile {
   requiresPremiumForName?: boolean;
   
   // Only present when isPremiumRequired is false
-  lastName: string; // Always present (only lastName, no firstName in search)
+  firstName?: string; // Only if hasViewedContact
+  lastName?: string; // Only if connected OR hasViewedContact OR received interest
   age?: number;
   height?: number;
   city?: string;
@@ -53,6 +54,14 @@ export interface SearchResultProfile {
   photos?: Array<{ url: string; isProfilePhoto: boolean }>;
   photosLocked?: boolean; // true if photos are private AND interest not accepted
   matchScore?: number;
+  
+  // Interest status flags
+  alreadySentInterest?: boolean;
+  sentInterestStatus?: 'pending' | 'accepted' | 'declined';
+  receivedInterest?: boolean;
+  receivedInterestStatus?: 'pending' | 'accepted' | 'declined';
+  isConnected?: boolean;
+  hasViewedContact?: boolean;
 }
 
 export interface SaveSearchPreferencesRequest extends SearchFilters {}

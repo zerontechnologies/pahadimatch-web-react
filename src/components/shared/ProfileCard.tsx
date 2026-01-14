@@ -273,14 +273,24 @@ export function ProfileCard({
             )}
 
             <div className="flex items-center gap-2 mt-3">
-              <Button size="sm" onClick={handleSendInterest} isLoading={isSendingInterest}>
-                <Heart className="w-4 h-4 mr-1" />
-                Send Interest
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => navigate(`/chat/${profile.profileId}`)}>
-                <MessageSquare className="w-4 h-4 mr-1" />
-                Message
-              </Button>
+              {!profile.alreadySentInterest && (
+                <Button size="sm" onClick={handleSendInterest} isLoading={isSendingInterest}>
+                  <Heart className="w-4 h-4 mr-1" />
+                  Send Interest
+                </Button>
+              )}
+              {profile.alreadySentInterest && (
+                <Badge variant={profile.sentInterestStatus === 'accepted' ? 'success' : 'outline'}>
+                  {profile.sentInterestStatus === 'accepted' ? 'Connected' : 
+                   profile.sentInterestStatus === 'declined' ? 'Declined' : 'Pending'}
+                </Badge>
+              )}
+              {profile.isConnected && (
+                <Button size="sm" variant="outline" onClick={() => navigate(`/chat/${profile.profileId}`)}>
+                  <MessageSquare className="w-4 h-4 mr-1" />
+                  Message
+                </Button>
+              )}
               <button
                 onClick={handleToggleShortlist}
                 className={cn(
@@ -372,15 +382,25 @@ export function ProfileCard({
 
           {/* Action Buttons - Show on Hover */}
           <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Button
-              size="sm"
-              className="flex-1"
-              onClick={handleSendInterest}
-              isLoading={isSendingInterest}
-            >
-              <Heart className="w-4 h-4 mr-1" />
-              Interest
-            </Button>
+            {!profile.alreadySentInterest ? (
+              <Button
+                size="sm"
+                className="flex-1"
+                onClick={handleSendInterest}
+                isLoading={isSendingInterest}
+              >
+                <Heart className="w-4 h-4 mr-1" />
+                Interest
+              </Button>
+            ) : (
+              <Badge 
+                variant={profile.sentInterestStatus === 'accepted' ? 'success' : 'outline'}
+                className="flex-1 justify-center"
+              >
+                {profile.sentInterestStatus === 'accepted' ? 'Connected' : 
+                 profile.sentInterestStatus === 'declined' ? 'Declined' : 'Pending'}
+              </Badge>
+            )}
             <Button
               size="sm"
               variant="secondary"

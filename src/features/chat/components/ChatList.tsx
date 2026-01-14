@@ -42,7 +42,9 @@ export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps)
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <span className="font-medium text-text truncate">
-                {chat.participant.firstName || ''} {chat.participant.lastName || 'Unknown'}
+                {chat.participant.hasViewedContact && chat.participant.firstName && chat.participant.lastName
+                  ? `${chat.participant.firstName} ${chat.participant.lastName}`
+                  : chat.participant.lastName || chat.participant.profileId}
               </span>
               <span className="text-xs text-text-muted flex-shrink-0">
                 {formatTimeAgo(chat.lastMessageAt)}

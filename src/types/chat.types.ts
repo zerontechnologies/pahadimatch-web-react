@@ -3,10 +3,12 @@ export type MessageStatus = 'sent' | 'delivered' | 'read';
 
 export interface ChatParticipant {
   profileId: string;
-  firstName?: string;
-  lastName?: string;
+  firstName?: string; // Only if hasViewedContact
+  lastName?: string; // Only if connected OR hasViewedContact
   profilePhoto?: string;
   isOnline?: boolean;
+  hasViewedContact?: boolean; // Flag to determine if full name should be shown
+  isConnected?: boolean; // Flag to determine if lastName should be shown
 }
 
 export interface ChatMessage {
