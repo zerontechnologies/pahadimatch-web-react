@@ -3,15 +3,11 @@ import { motion } from 'framer-motion';
 import { 
   Settings, 
   User, 
-  Lock, 
   Bell, 
   Shield, 
   Phone, 
-  Mail, 
   Key,
   Eye,
-  EyeOff,
-  Save,
   AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -21,11 +17,13 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useGetOwnProfileQuery, useUpdatePrivacyMutation, useUpdateNotificationSettingsMutation } from '@/store/api/profileApi';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { selectCurrentUser } from '@/store/slices/authSlice';
 import { addToast } from '@/store/slices/uiSlice';
 
 export function SettingsPage() {
   const dispatch = useAppDispatch();
+  const user = useAppSelector(selectCurrentUser);
   const { data: profile } = useGetOwnProfileQuery();
   const [updatePrivacy, { isLoading: isUpdatingPrivacy }] = useUpdatePrivacyMutation();
   const [updateNotificationSettings, { isLoading: isUpdatingNotifications }] = useUpdateNotificationSettingsMutation();
@@ -227,7 +225,7 @@ export function SettingsPage() {
                 <label className="text-sm font-medium text-text-secondary">Phone Number</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Input
-                    value={profileData?.phone || 'Not set'}
+                    value={user?.phone || 'Not set'}
                     disabled
                     className="bg-champagne"
                   />
@@ -241,7 +239,7 @@ export function SettingsPage() {
                 <label className="text-sm font-medium text-text-secondary">Email</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Input
-                    value={profileData?.email || 'Not set'}
+                    value="Not available"
                     disabled
                     className="bg-champagne"
                   />
@@ -261,7 +259,7 @@ export function SettingsPage() {
                     <p className="text-xs text-text-muted mt-1">
                       Deleting your account will permanently remove all your data. This action cannot be undone.
                     </p>
-                    <Button variant="destructive" size="sm" className="mt-3">
+                    <Button variant="danger" size="sm" className="mt-3">
                       Delete Account
                     </Button>
                   </div>

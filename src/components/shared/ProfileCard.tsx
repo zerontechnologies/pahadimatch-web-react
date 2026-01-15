@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn, formatHeight, formatIncome, formatTimeAgo, getInitials, capitalize } from '@/lib/utils';
+import { cn, formatHeight, formatTimeAgo, getInitials, capitalize } from '@/lib/utils';
 import { useSendInterestMutation, useShortlistProfileMutation, useRemoveFromShortlistMutation } from '@/store/api/activityApi';
 import { useAppDispatch } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
@@ -30,7 +30,7 @@ interface ProfileCardProps {
   showMatchScore?: boolean;
 }
 
-export function ProfileCard({ 
+export const ProfileCard = memo(function ProfileCard({ 
   profile, 
   variant = 'grid', 
   isShortlisted = false,
@@ -111,7 +111,6 @@ export function ProfileCard({
   const profilePhoto = canSeePhotos 
     ? (profile.photos?.find(p => p.isProfilePhoto)?.url || profile.photos?.[0]?.url || profile.profilePhoto)
     : undefined;
-  const hasProfileData = !profile.isPremiumRequired && profile.firstName;
 
   // Premium Required - Locked Card
   if (profile.isPremiumRequired) {
@@ -328,6 +327,8 @@ export function ProfileCard({
             <img
               src={profilePhoto}
               alt={profile.firstName || 'Profile'}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : profile.photosLocked ? (
@@ -473,5 +474,18 @@ export function ProfileCard({
       </motion.div>
     </Link>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison for memo - only re-render if these props change
+  return (
+    prevProps.profile.profileId === nextProps.profile.profileId &&
+    prevProps.profile.profilePhoto === nextProps.profile.profilePhoto &&
+    prevProps.profile.lastName === nextProps.profile.lastName &&
+    prevProps.profile.isPremiumRequired === nextProps.profile.isPremiumRequired &&
+    prevProps.profile.photosLocked === nextProps.profile.photosLocked &&
+    prevProps.profile.alreadySentInterest === nextProps.profile.alreadySentInterest &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.isShortlisted === nextProps.isShortlisted &&
+    prevProps.showMatchScore === nextProps.showMatchScore
+  );
+});
 

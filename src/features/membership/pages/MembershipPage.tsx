@@ -35,7 +35,7 @@ export function MembershipPage() {
   const plans = plansData?.data || [];
   const currentMembership = summaryData?.data;
 
-  const handleUpgrade = (planId: PlanType) => {
+  const handleUpgrade = (_planId: PlanType) => {
     // TODO: Integrate with Razorpay
     dispatch(addToast({
       type: 'info',

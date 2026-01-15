@@ -67,8 +67,6 @@ export const chatApi = apiSlice.injectEndpoints({
     getUnreadCount: builder.query<ApiResponse<UnreadCountResponse>, void>({
       query: () => '/chat/unread',
       providesTags: ['Chats'],
-      // Poll every 30 seconds to keep count updated
-      pollingInterval: 30000,
     }),
   }),
 });

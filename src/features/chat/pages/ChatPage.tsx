@@ -1,8 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MessageSquare, Users } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { ChatListSkeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ChatList } from '../components/ChatList';
@@ -34,8 +32,12 @@ export function ChatPage() {
     }
   }, [profileIdFromUrl, setSearchParams]);
   
-  const { data, isLoading } = useGetChatListQuery();
-  const { data: connectionsData, isLoading: connectionsLoading } = useGetConnectionsQuery({ page: 1, limit: 100 });
+  const { data, isLoading } = useGetChatListQuery(undefined, {
+    // Poll every 30 seconds for new messages, but only if tab is visible
+    pollingInterval: 30000,
+    refetchOnMountOrArgChange: true,
+  });
+  const { data: connectionsData, isLoading: connectionsLoading } = useGetConnectionsQuery({ page: 1, limit: 50 });
   const chats = data?.data || [];
   const connections = connectionsData?.data || [];
 

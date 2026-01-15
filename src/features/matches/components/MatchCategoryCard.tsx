@@ -17,7 +17,12 @@ export function MatchCategoryCard({ category, count = 0, index = 0 }: MatchCateg
   const getIconComponent = () => {
     if (!category.icon) return Icons.Heart;
     const IconName = category.icon as keyof typeof Icons;
-    return Icons[IconName] || Icons.Heart;
+    const Icon = Icons[IconName];
+    // Check if it's a valid lucide icon component (not a function creator)
+    if (Icon && typeof Icon === 'function' && 'displayName' in Icon) {
+      return Icon as React.ComponentType<{ className?: string }>;
+    }
+    return Icons.Heart;
   };
   const IconComponent = getIconComponent();
 

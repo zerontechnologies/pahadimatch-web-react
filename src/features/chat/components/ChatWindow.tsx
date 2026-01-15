@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Send, MoreVertical, Phone, Video, Info, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn, formatTimeAgo, getInitials } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { useGetChatMessagesQuery, useSendMessageMutation, useMarkMessagesAsReadMutation, useGetChatListQuery } from '@/store/api/chatApi';
 import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -44,14 +44,14 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   const isConnectionChat = chat.id.startsWith('connection-');
   const realChatId = isConnectionChat ? null : chat.id;
   
-  const { data, isLoading, refetch } = useGetChatMessagesQuery(
+  const { data, refetch } = useGetChatMessagesQuery(
     { chatId: realChatId || '', limit: 50 },
     { skip: isConnectionChat } // Skip query for connection chats
   );
   const { refetch: refetchChatList } = useGetChatListQuery();
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
   const [markAsRead] = useMarkMessagesAsReadMutation();
-  const { data: membership, isLoading: isLoadingMembership } = useGetMembershipSummaryQuery();
+  const { data: membership } = useGetMembershipSummaryQuery();
   
   // Check if user can send custom messages
   // Premium users can send custom messages to any chat they can see
@@ -67,10 +67,18 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
 
   const messages = data?.data || [];
 
-  // Scroll to bottom on new messages
+  // Memoize messages to prevent unnecessary re-renders
+  const memoizedMessages = useMemo(() => messages, [messages.length, messages[messages.length - 1]?.id]);
+
+  // Scroll to bottom on new messages (throttled for performance)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (messagesEndRef.current) {
+      // Use requestAnimationFrame for smoother scrolling
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, [memoizedMessages]);
 
   // Mark as read when chat opens (only for real chats)
   useEffect(() => {
@@ -95,7 +103,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
     }
 
     try {
-      const result = await sendMessage({
+      await sendMessage({
         profileId: chat.participant.profileId,
         data: { content: messageToSend }
       }).unwrap();

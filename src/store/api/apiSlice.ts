@@ -13,7 +13,7 @@ const baseQuery = fetchBaseQuery({
       headers.set('Authorization', `Bearer ${token}`);
     }
     // Set Content-Type for JSON requests
-    // For FormData, we'll skip setting Content-Type in the mutation
+    // For FormData, we'll delete it in baseQueryWithReauth
     headers.set('Content-Type', 'application/json');
     return headers;
   },
@@ -28,17 +28,19 @@ const baseQueryWithReauth: BaseQueryFn<
   // Handle FormData - don't set Content-Type, let browser set it with boundary
   let modifiedArgs = args;
   if (typeof args === 'object' && 'body' in args && args.body instanceof FormData) {
+    // For FormData, create new args without Content-Type header
+    const headers: Record<string, string> = {};
+    if (typeof args === 'object' && 'headers' in args && args.headers) {
+      Object.entries(args.headers as Record<string, string>).forEach(([key, value]) => {
+        if (key.toLowerCase() !== 'content-type') {
+          headers[key] = value;
+        }
+      });
+    }
     modifiedArgs = {
       ...args,
-      prepareHeaders: (headers: Headers) => {
-        headers.delete('Content-Type');
-        const token = (api.getState() as RootState).auth.token;
-        if (token) {
-          headers.set('Authorization', `Bearer ${token}`);
-        }
-        return headers;
-      },
-    };
+      headers,
+    } as FetchArgs;
   }
   
   const result = await baseQuery(modifiedArgs, api, extraOptions);
@@ -74,6 +76,9 @@ export const apiSlice = createApi({
     'Kundali',
     'ProfileViews',
   ],
+  // Optimize for high traffic: keep cache longer, reduce refetch frequency
+  keepUnusedDataFor: 60, // Keep cached data for 60 seconds
+  refetchOnMountOrArgChange: 30, // Refetch only if data is older than 30 seconds
   endpoints: () => ({}),
 });
 

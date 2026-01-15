@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { 
   Heart, 
   Bell, 
@@ -30,15 +28,14 @@ import { toggleMobileMenu, addToast } from '@/store/slices/uiSlice';
 import { useGetUnreadCountQuery } from '@/store/api/chatApi';
 import { useGetNotificationUnreadCountQuery } from '@/store/api/notificationApi';
 import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
-import { getInitials } from '@/lib/utils';
 
 export function Header() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectCurrentUser);
   
-  const { data: chatUnread } = useGetUnreadCountQuery();
-  const { data: notificationUnread } = useGetNotificationUnreadCountQuery();
+  const { data: chatUnread } = useGetUnreadCountQuery(undefined, { pollingInterval: 30000 });
+  const { data: notificationUnread } = useGetNotificationUnreadCountQuery(undefined, { pollingInterval: 30000 });
   const { data: membership } = useGetMembershipSummaryQuery();
 
   const unreadMessages = chatUnread?.data?.unreadCount || 0;

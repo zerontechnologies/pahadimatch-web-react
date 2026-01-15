@@ -12,7 +12,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -355,7 +355,7 @@ export function PhotosPage() {
                     </Button>
                     <Button
                       size="sm"
-                      variant="destructive"
+                      variant="danger"
                       onClick={() => setDeleteConfirmId(photo.id)}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -385,7 +385,7 @@ export function PhotosPage() {
               Upload at least {PHOTO_CONSTRAINTS.minPhotos} photos to complete your profile
             </p>
             {canUploadMore && (
-              <Button onClick={() => document.querySelector('input[type="file"]')?.click()}>
+              <Button onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}>
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Photos
               </Button>

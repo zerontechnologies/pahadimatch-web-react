@@ -1,10 +1,6 @@
 import { apiSlice } from './apiSlice';
 import type { ApiResponse, Notification, Pagination } from '@/types';
 
-interface NotificationsResponse {
-  notifications: Notification[];
-  unreadCount: number;
-}
 
 export const notificationApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -22,8 +18,6 @@ export const notificationApi = apiSlice.injectEndpoints({
     getNotificationUnreadCount: builder.query<ApiResponse<{ unreadCount: number }>, void>({
       query: () => '/notifications/unread-count',
       providesTags: ['Notifications'],
-      // Poll every 30 seconds to keep count updated
-      pollingInterval: 30000,
     }),
     
     // Mark as Read

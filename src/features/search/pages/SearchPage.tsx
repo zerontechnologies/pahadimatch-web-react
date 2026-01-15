@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, SlidersHorizontal, Grid, List, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { useLazySearchProfilesQuery } from '@/store/api/searchApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectIsSearchFilterOpen, setSearchFilterOpen } from '@/store/slices/uiSlice';
-import { cn } from '@/lib/utils';
+import { cn, debounce } from '@/lib/utils';
 import type { SearchFilters } from '@/types';
 
 const religionOptions = [
@@ -72,26 +72,41 @@ export function SearchPage() {
     }
   }, [pagination?.page]);
 
+  // Debounced search function - prevents excessive API calls
+  const debouncedSearch = useMemo(
+    () => debounce((searchFilters: SearchFilters, searchPage: number) => {
+      searchProfiles({ ...searchFilters, page: searchPage, limit: 20 });
+    }, 500),
+    [searchProfiles]
+  );
+
   // Initial search
   useEffect(() => {
     searchProfiles({ ...filters, page, limit: 20 });
   }, []);
 
-  const handleSearch = () => {
+  // Auto-search when filters change (debounced)
+  useEffect(() => {
+    if (page === 1) {
+      debouncedSearch(filters, 1);
+    }
+  }, [filters, debouncedSearch]);
+
+  const handleSearch = useCallback(() => {
     setPage(1);
     searchProfiles({ ...filters, page: 1, limit: 20 });
     dispatch(setSearchFilterOpen(false));
-  };
+  }, [filters, searchProfiles, dispatch]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setFilters(defaultFilters);
     setPage(1);
     searchProfiles({ ...defaultFilters, page: 1, limit: 20 });
-  };
+  }, [searchProfiles]);
 
-  const updateFilter = (key: keyof SearchFilters, value: any) => {
+  const updateFilter = useCallback((key: keyof SearchFilters, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
   const activeFilterCount = Object.keys(filters).filter((key) => {
     const value = filters[key as keyof SearchFilters];

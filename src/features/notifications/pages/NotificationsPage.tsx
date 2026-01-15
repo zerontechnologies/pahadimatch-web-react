@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -8,14 +7,12 @@ import {
   MessageSquare, 
   Eye, 
   User,
-  X,
   Trash2,
   CheckCheck
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,7 +24,7 @@ import {
 } from '@/store/api/notificationApi';
 import { useAppDispatch } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
-import { formatTimeAgo, getInitials } from '@/lib/utils';
+import { formatTimeAgo } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 const NOTIFICATION_ICONS: Record<string, any> = {

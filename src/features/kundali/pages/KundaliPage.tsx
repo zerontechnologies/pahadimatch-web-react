@@ -4,9 +4,6 @@ import { motion } from 'framer-motion';
 import { 
   Sparkles, 
   Moon, 
-  MapPin, 
-  Calendar, 
-  Clock, 
   Save,
   X,
   AlertCircle,
@@ -20,7 +17,6 @@ import { useGetKundaliQuery, useCreateKundaliMutation } from '@/store/api/kundal
 import { useAppDispatch } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
 import { Skeleton } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/shared/EmptyState';
 import type { CreateKundaliRequest } from '@/types';
 
 export function KundaliPage() {

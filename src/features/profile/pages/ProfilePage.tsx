@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -7,21 +6,15 @@ import {
   Camera, 
   MapPin, 
   GraduationCap, 
-  Briefcase, 
-  Heart,
   Shield,
   Eye,
   Settings,
   CheckCircle2,
-  XCircle,
   Calendar,
   Ruler,
   Users as UsersIcon,
-  Home,
-  UtensilsCrossed,
   Sparkles,
-  Moon,
-  Star
+  Moon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

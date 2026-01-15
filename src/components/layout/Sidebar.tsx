@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -6,15 +6,12 @@ import {
   Heart, 
   MessageSquare, 
   Users, 
-  Bell, 
   User, 
   Settings,
   Crown,
   Image,
   Star,
   Bookmark,
-  UserCheck,
-  UserX,
   Sparkles,
   X
 } from 'lucide-react';

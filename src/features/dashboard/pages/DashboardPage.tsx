@@ -9,8 +9,6 @@ import {
   Crown,
   ChevronRight,
   Star,
-  TrendingUp,
-  Clock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,8 +16,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ProfileCard } from '@/components/shared/ProfileCard';
 import { ProfileCardSkeleton } from '@/components/ui/skeleton';
-import { useAppSelector } from '@/store/hooks';
-import { selectCurrentUser } from '@/store/slices/authSlice';
 import { useGetOwnProfileQuery, useGetProfileViewsQuery } from '@/store/api/profileApi';
 import { useGetMatchesByCategoryQuery } from '@/store/api/matchApi';
 import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
@@ -43,8 +39,7 @@ const itemVariants = {
 };
 
 export function DashboardPage() {
-  const user = useAppSelector(selectCurrentUser);
-  const { data: profile, isLoading: profileLoading } = useGetOwnProfileQuery();
+  const { data: profile } = useGetOwnProfileQuery();
   const { data: membership } = useGetMembershipSummaryQuery();
   const { data: newMatches, isLoading: matchesLoading } = useGetMatchesByCategoryQuery({
     category: 'new_matches',
@@ -53,7 +48,7 @@ export function DashboardPage() {
   const { data: interests } = useGetReceivedInterestsQuery({ status: 'pending', limit: 5 });
   const { data: profileViews } = useGetProfileViewsQuery({ page: 1, limit: 1 });
   const { data: chats } = useGetChatListQuery();
-  const { data: unreadCount } = useGetUnreadCountQuery();
+  const { data: unreadCount } = useGetUnreadCountQuery(undefined, { pollingInterval: 30000 });
 
   const profileData = profile?.data;
   const membershipData = membership?.data;
@@ -126,7 +121,7 @@ export function DashboardPage() {
 
       {/* Stats Grid */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, idx) => (
+        {stats.map((stat) => (
           <Card key={stat.label} className="hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
