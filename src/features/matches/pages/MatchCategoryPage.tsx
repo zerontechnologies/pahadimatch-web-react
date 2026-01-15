@@ -103,12 +103,18 @@ export function MatchCategoryPage() {
           </div>
 
           {/* Pagination */}
-          {pagination && (
-            <div className="flex justify-center gap-2 mt-8">
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
               <Button
                 variant="outline"
-                disabled={!pagination.hasPrev || isFetching}
-                onClick={() => setPage(page - 1)}
+                disabled={pagination.page <= 1 || isFetching}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (pagination.page > 1) {
+                    setPage(page - 1);
+                  }
+                }}
               >
                 Previous
               </Button>
@@ -117,8 +123,14 @@ export function MatchCategoryPage() {
               </span>
               <Button
                 variant="outline"
-                disabled={!pagination.hasNext || isFetching}
-                onClick={() => setPage(page + 1)}
+                disabled={pagination.page >= pagination.totalPages || isFetching}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (pagination.page < pagination.totalPages) {
+                    setPage(page + 1);
+                  }
+                }}
               >
                 Next
               </Button>

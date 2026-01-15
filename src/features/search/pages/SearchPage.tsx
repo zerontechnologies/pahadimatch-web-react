@@ -65,6 +65,13 @@ export function SearchPage() {
   const profiles = data?.data || [];
   const pagination = data?.pagination;
 
+  // Sync page state with pagination from API
+  useEffect(() => {
+    if (pagination?.page && pagination.page !== page) {
+      setPage(pagination.page);
+    }
+  }, [pagination?.page]);
+
   // Initial search
   useEffect(() => {
     searchProfiles({ ...filters, page, limit: 20 });
@@ -338,14 +345,18 @@ export function SearchPage() {
 
               {/* Pagination */}
               {pagination && pagination.totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-8">
+                <div className="flex justify-center items-center gap-4 mt-8">
                   <Button
                     variant="outline"
-                    disabled={!pagination.hasPrev || isFetching}
-                    onClick={() => {
-                      const newPage = page - 1;
-                      setPage(newPage);
-                      searchProfiles({ ...filters, page: newPage, limit: 20 });
+                    disabled={pagination.page <= 1 || isFetching}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (pagination && pagination.page > 1) {
+                        const newPage = pagination.page - 1;
+                        setPage(newPage);
+                        searchProfiles({ ...filters, page: newPage, limit: 20 });
+                      }
                     }}
                   >
                     Previous
@@ -355,11 +366,15 @@ export function SearchPage() {
                   </span>
                   <Button
                     variant="outline"
-                    disabled={!pagination.hasNext || isFetching}
-                    onClick={() => {
-                      const newPage = page + 1;
-                      setPage(newPage);
-                      searchProfiles({ ...filters, page: newPage, limit: 20 });
+                    disabled={pagination.page >= pagination.totalPages || isFetching}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (pagination && pagination.page < pagination.totalPages) {
+                        const newPage = pagination.page + 1;
+                        setPage(newPage);
+                        searchProfiles({ ...filters, page: newPage, limit: 20 });
+                      }
                     }}
                   >
                     Next

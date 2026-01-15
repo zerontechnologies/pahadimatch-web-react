@@ -225,8 +225,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!receivedData.pagination.hasPrev || receivedLoading}
-                onClick={() => setPage({ ...page, received: getCurrentPage('received') - 1 })}
+                disabled={receivedData.pagination.page <= 1 || receivedLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (receivedData.pagination.page > 1) {
+                    setPage({ ...page, received: getCurrentPage('received') - 1 });
+                  }
+                }}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -237,8 +243,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!receivedData.pagination.hasNext || receivedLoading}
-                onClick={() => setPage({ ...page, received: getCurrentPage('received') + 1 })}
+                disabled={receivedData.pagination.page >= receivedData.pagination.totalPages || receivedLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (receivedData.pagination.page < receivedData.pagination.totalPages) {
+                    setPage({ ...page, received: getCurrentPage('received') + 1 });
+                  }
+                }}
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -300,8 +312,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!sentData.pagination.hasPrev || sentLoading}
-                onClick={() => setPage({ ...page, sent: getCurrentPage('sent') - 1 })}
+                disabled={sentData.pagination.page <= 1 || sentLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (sentData.pagination.page > 1) {
+                    setPage({ ...page, sent: getCurrentPage('sent') - 1 });
+                  }
+                }}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -312,8 +330,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!sentData.pagination.hasNext || sentLoading}
-                onClick={() => setPage({ ...page, sent: getCurrentPage('sent') + 1 })}
+                disabled={sentData.pagination.page >= sentData.pagination.totalPages || sentLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (sentData.pagination.page < sentData.pagination.totalPages) {
+                    setPage({ ...page, sent: getCurrentPage('sent') + 1 });
+                  }
+                }}
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -385,8 +409,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!connectionsData.pagination.hasPrev || connectionsLoading}
-                onClick={() => setPage({ ...page, connections: getCurrentPage('connections') - 1 })}
+                disabled={connectionsData.pagination.page <= 1 || connectionsLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (connectionsData.pagination.page > 1) {
+                    setPage({ ...page, connections: getCurrentPage('connections') - 1 });
+                  }
+                }}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -397,8 +427,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!connectionsData.pagination.hasNext || connectionsLoading}
-                onClick={() => setPage({ ...page, connections: getCurrentPage('connections') + 1 })}
+                disabled={connectionsData.pagination.page >= connectionsData.pagination.totalPages || connectionsLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (connectionsData.pagination.page < connectionsData.pagination.totalPages) {
+                    setPage({ ...page, connections: getCurrentPage('connections') + 1 });
+                  }
+                }}
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -457,8 +493,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!shortlistedData.pagination.hasPrev || shortlistedLoading}
-                onClick={() => setPage({ ...page, shortlisted: getCurrentPage('shortlisted') - 1 })}
+                disabled={shortlistedData.pagination.page <= 1 || shortlistedLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (shortlistedData.pagination.page > 1) {
+                    setPage({ ...page, shortlisted: getCurrentPage('shortlisted') - 1 });
+                  }
+                }}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -469,8 +511,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!shortlistedData.pagination.hasNext || shortlistedLoading}
-                onClick={() => setPage({ ...page, shortlisted: getCurrentPage('shortlisted') + 1 })}
+                disabled={shortlistedData.pagination.page >= shortlistedData.pagination.totalPages || shortlistedLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (shortlistedData.pagination.page < shortlistedData.pagination.totalPages) {
+                    setPage({ ...page, shortlisted: getCurrentPage('shortlisted') + 1 });
+                  }
+                }}
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -529,8 +577,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!blockedData.pagination.hasPrev || blockedLoading}
-                onClick={() => setPage({ ...page, blocked: getCurrentPage('blocked') - 1 })}
+                disabled={blockedData.pagination.page <= 1 || blockedLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (blockedData.pagination.page > 1) {
+                    setPage({ ...page, blocked: getCurrentPage('blocked') - 1 });
+                  }
+                }}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -541,8 +595,14 @@ export function ActivityPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!blockedData.pagination.hasNext || blockedLoading}
-                onClick={() => setPage({ ...page, blocked: getCurrentPage('blocked') + 1 })}
+                disabled={blockedData.pagination.page >= blockedData.pagination.totalPages || blockedLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (blockedData.pagination.page < blockedData.pagination.totalPages) {
+                    setPage({ ...page, blocked: getCurrentPage('blocked') + 1 });
+                  }
+                }}
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />

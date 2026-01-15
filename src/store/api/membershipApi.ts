@@ -20,6 +20,8 @@ export const membershipApi = apiSlice.injectEndpoints({
     getMembershipSummary: builder.query<ApiResponse<MembershipSummary>, void>({
       query: () => '/membership/summary',
       providesTags: ['Membership'],
+      // Force refetch on mount to ensure fresh data after login
+      refetchOnMountOrArgChange: true,
     }),
     
     // Purchase Membership
