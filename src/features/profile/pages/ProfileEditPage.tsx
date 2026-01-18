@@ -102,6 +102,36 @@ const ORIGIN_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
+const COMMUNITY_OPTIONS = [
+  { value: 'garhwali', label: 'Garhwali' },
+  { value: 'kumaoni', label: 'Kumaoni' },
+  { value: 'jonsari', label: 'Jonsari' },
+  { value: 'other', label: 'Other' },
+];
+
+const CASTE_OPTIONS = [
+  { value: 'brahmin', label: 'Brahmin' },
+  { value: 'rajput', label: 'Rajput' },
+  { value: 'others', label: 'Others' },
+];
+
+const ACCOUNT_CREATED_BY_OPTIONS = [
+  { value: 'self', label: 'Self' },
+  { value: 'parent', label: 'Parent' },
+  { value: 'sibling', label: 'Sibling' },
+];
+
+const PARENT_STATUS_OPTIONS = [
+  { value: 'alive', label: 'Alive' },
+  { value: 'deceased', label: 'Deceased' },
+];
+
+const EMPLOYMENT_STATUS_OPTIONS = [
+  { value: 'working', label: 'Working' },
+  { value: 'retired', label: 'Retired' },
+  { value: 'not_working', label: 'Not Working' },
+];
+
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
@@ -123,7 +153,68 @@ export function ProfileEditPage() {
   // Load profile data into form
   useEffect(() => {
     if (profile?.data) {
-      setFormData(profile.data);
+      const profileData: ProfileCreateRequest = { ...profile.data };
+      
+      // Convert dateOfBirth from ISO string to YYYY-MM-DD format for date input
+      if (profileData.dateOfBirth) {
+        try {
+          const date = new Date(profileData.dateOfBirth);
+          if (!isNaN(date.getTime())) {
+            // Format as YYYY-MM-DD
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            profileData.dateOfBirth = `${year}-${month}-${day}`;
+          }
+        } catch (e) {
+          console.error('Error parsing dateOfBirth:', e);
+        }
+      }
+      
+      // Ensure all string fields are properly set (handle null/undefined)
+      const stringFields: (keyof ProfileCreateRequest)[] = [
+        'firstName', 'lastName', 'city', 'state', 'country', 
+        'educationDetail', 'college', 'occupationDetail', 'company',
+        'caste', 'motherTongue', 'fatherName', 'fatherOccupation', 
+        'motherName', 'motherOccupation', 'gothra', 'subCaste', 'aboutMe'
+      ];
+      
+      stringFields.forEach(field => {
+        if (profileData[field] === null || profileData[field] === undefined) {
+          profileData[field] = '' as any;
+        }
+      });
+      
+      // Explicitly ensure enum/select fields are set correctly as strings
+      // Gender - ensure it's a valid value and is set
+      if (profileData.gender !== null && profileData.gender !== undefined) {
+        profileData.gender = String(profileData.gender).trim() as any;
+      }
+      
+      // Community/Origin - use community if available, fallback to origin for backward compatibility
+      if (profileData.community !== null && profileData.community !== undefined) {
+        profileData.community = String(profileData.community).trim() as any;
+      } else if (profileData.origin !== null && profileData.origin !== undefined) {
+        // Backward compatibility: if community not set, use origin
+        profileData.community = String(profileData.origin).trim() as any;
+      }
+      
+      // Origin - keep for backward compatibility (read-only)
+      if (profileData.origin !== null && profileData.origin !== undefined) {
+        profileData.origin = String(profileData.origin).trim() as any;
+      }
+      
+      // Religion - ensure it's a valid value and is set
+      if (profileData.religion !== null && profileData.religion !== undefined) {
+        profileData.religion = String(profileData.religion).trim() as any;
+      }
+      
+      // Caste - ensure it's a valid enum value
+      if (profileData.caste !== null && profileData.caste !== undefined) {
+        profileData.caste = String(profileData.caste).trim() as any;
+      }
+      
+      setFormData(profileData);
     }
   }, [profile]);
 
@@ -147,7 +238,25 @@ export function ProfileEditPage() {
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-    return age >= 18 && age <= 100 ? age : null;
+    return age >= 0 && age <= 100 ? age : null;
+  };
+
+  const getMinAge = (): number => {
+    // Boys: min 21, Girls: min 18
+    return formData.gender === 'male' ? 21 : 18;
+  };
+
+  const getMaxDate = (): string => {
+    const minAge = getMinAge();
+    return new Date(new Date().setFullYear(new Date().getFullYear() - minAge)).toISOString().split('T')[0];
+  };
+
+  const validateAge = (dateOfBirth: string): boolean => {
+    if (!dateOfBirth) return false;
+    const age = calculateAge(dateOfBirth);
+    if (age === null) return false;
+    const minAge = getMinAge();
+    return age >= minAge && age <= 100;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,11 +270,13 @@ export function ProfileEditPage() {
     if (!formData.gender) newErrors.gender = 'Gender is required';
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = 'Date of birth is required';
-    } else if (calculateAge(formData.dateOfBirth) === null) {
-      newErrors.dateOfBirth = 'Age must be between 18 and 100 years';
+    } else if (!validateAge(formData.dateOfBirth)) {
+      const minAge = getMinAge();
+      const genderText = formData.gender === 'male' ? 'boys' : 'girls';
+      newErrors.dateOfBirth = `Minimum age for ${genderText} is ${minAge} years`;
     }
-    if (!formData.height || formData.height < 140 || formData.height > 210) {
-      newErrors.height = 'Height must be between 140 and 210 cm';
+    if (!formData.height || formData.height < 140 || formData.height > 999) {
+      newErrors.height = 'Height must be between 140 and 999 cm';
     }
     if (!formData.education) newErrors.education = 'Education is required';
     if (!formData.occupation) newErrors.occupation = 'Occupation is required';
@@ -294,7 +405,7 @@ export function ProfileEditPage() {
                       Gender <span className="text-error">*</span>
                     </label>
                     <Select
-                      value={formData.gender || ''}
+                      value={formData.gender ? String(formData.gender) : undefined}
                       onValueChange={(val) => updateField('gender', val)}
                     >
                       <SelectTrigger className={errors.gender ? 'border-error' : ''}>
@@ -321,7 +432,7 @@ export function ProfileEditPage() {
                       type="date"
                       value={formData.dateOfBirth || ''}
                       onChange={(e) => updateField('dateOfBirth', e.target.value)}
-                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                      max={getMaxDate()}
                       min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0]}
                       error={errors.dateOfBirth}
                       required
@@ -329,6 +440,11 @@ export function ProfileEditPage() {
                     {formData.dateOfBirth && !errors.dateOfBirth && calculateAge(formData.dateOfBirth) !== null && (
                       <p className="text-xs text-text-muted mt-1">
                         Age: {calculateAge(formData.dateOfBirth)} years
+                      </p>
+                    )}
+                    {formData.gender && (
+                      <p className="text-xs text-text-muted mt-1">
+                        Minimum age: {getMinAge()} years
                       </p>
                     )}
                   </div>
@@ -344,11 +460,14 @@ export function ProfileEditPage() {
                       value={formData.height || ''}
                       onChange={(e) => {
                         const val = e.target.value;
-                        updateField('height', val ? parseInt(val) : undefined);
+                        // Limit to 3 digits max (999)
+                        if (val === '' || (val.length <= 3 && !isNaN(Number(val)))) {
+                          updateField('height', val ? parseInt(val) : undefined);
+                        }
                       }}
                       placeholder="e.g., 175"
                       min={140}
-                      max={210}
+                      max={999}
                       error={errors.height}
                       required
                     />
@@ -374,17 +493,42 @@ export function ProfileEditPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Origin
+                    Community
                   </label>
                   <Select
-                    value={formData.origin || ''}
-                    onValueChange={(val) => updateField('origin', val)}
+                    value={formData.community ? String(formData.community) : (formData.origin ? String(formData.origin) : undefined)}
+                    onValueChange={(val) => {
+                      updateField('community', val);
+                      // Also update origin for backward compatibility
+                      updateField('origin', val);
+                    }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select origin (optional)" />
+                      <SelectValue placeholder="Select community (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      {ORIGIN_OPTIONS.map((opt) => (
+                      {COMMUNITY_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Account Created By
+                  </label>
+                  <Select
+                    value={formData.accountCreatedBy || ''}
+                    onValueChange={(val) => updateField('accountCreatedBy', val || undefined)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCOUNT_CREATED_BY_OPTIONS.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </SelectItem>
@@ -464,7 +608,7 @@ export function ProfileEditPage() {
                       Religion <span className="text-error">*</span>
                     </label>
                     <Select
-                      value={formData.religion || 'hindu'}
+                      value={formData.religion ? String(formData.religion) : undefined}
                       onValueChange={(val) => updateField('religion', val)}
                     >
                       <SelectTrigger>
@@ -482,12 +626,26 @@ export function ProfileEditPage() {
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <Input
-                    label="Caste"
-                    value={formData.caste || ''}
-                    onChange={(e) => updateField('caste', e.target.value.trim())}
-                    placeholder="Enter your caste"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Caste
+                    </label>
+                    <Select
+                      value={formData.caste || ''}
+                      onValueChange={(val) => updateField('caste', val || undefined)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select caste (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CASTE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Input
                     label="Mother Tongue"
                     value={formData.motherTongue || ''}
@@ -579,7 +737,7 @@ export function ProfileEditPage() {
                 <Input
                   label="Company/Organization"
                   value={formData.company || ''}
-                  onChange={(e) => updateField('company', e.target.value.trim())}
+                  onChange={(e) => updateField('company', e.target.value)}
                   placeholder="Where do you work?"
                 />
 
@@ -684,18 +842,134 @@ export function ProfileEditPage() {
                   </Select>
                 </div>
 
-                <Input
-                  label="Father's Occupation"
-                  value={formData.fatherOccupation || ''}
-                  onChange={(e) => updateField('fatherOccupation', e.target.value.trim())}
-                  placeholder="Father's profession"
-                />
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h3 className="text-sm font-semibold text-text">Father's Details</h3>
+                  <Input
+                    label="Father's Name"
+                    value={formData.fatherName || ''}
+                    onChange={(e) => updateField('fatherName', e.target.value)}
+                    placeholder="Father's name (optional)"
+                  />
+                  <Input
+                    label="Father's Occupation"
+                    value={formData.fatherOccupation || ''}
+                    onChange={(e) => updateField('fatherOccupation', e.target.value.trim())}
+                    placeholder="Father's profession"
+                  />
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        Alive Status
+                      </label>
+                      <Select
+                        value={formData.fatherAlive || ''}
+                        onValueChange={(val) => updateField('fatherAlive', val || undefined)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PARENT_STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        Employment Status
+                      </label>
+                      <Select
+                        value={formData.fatherEmploymentStatus || ''}
+                        onValueChange={(val) => updateField('fatherEmploymentStatus', val || undefined)}
+                        disabled={formData.fatherAlive === 'deceased'}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EMPLOYMENT_STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h3 className="text-sm font-semibold text-text">Mother's Details</h3>
+                  <Input
+                    label="Mother's Name"
+                    value={formData.motherName || ''}
+                    onChange={(e) => updateField('motherName', e.target.value)}
+                    placeholder="Mother's name (optional)"
+                  />
+                  <Input
+                    label="Mother's Occupation"
+                    value={formData.motherOccupation || ''}
+                    onChange={(e) => updateField('motherOccupation', e.target.value.trim())}
+                    placeholder="Mother's profession"
+                  />
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        Alive Status
+                      </label>
+                      <Select
+                        value={formData.motherAlive || ''}
+                        onValueChange={(val) => updateField('motherAlive', val || undefined)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PARENT_STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        Employment Status
+                      </label>
+                      <Select
+                        value={formData.motherEmploymentStatus || ''}
+                        onValueChange={(val) => updateField('motherEmploymentStatus', val || undefined)}
+                        disabled={formData.motherAlive === 'deceased'}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EMPLOYMENT_STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
 
                 <Input
-                  label="Mother's Occupation"
-                  value={formData.motherOccupation || ''}
-                  onChange={(e) => updateField('motherOccupation', e.target.value.trim())}
-                  placeholder="Mother's profession"
+                  label="Number of Siblings"
+                  type="number"
+                  value={formData.siblings || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    updateField('siblings', val ? parseInt(val) : undefined);
+                  }}
+                  placeholder="Enter number of siblings (optional)"
+                  min={0}
                 />
 
                 <div>

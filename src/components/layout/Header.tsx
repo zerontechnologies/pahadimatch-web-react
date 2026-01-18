@@ -28,11 +28,14 @@ import { toggleMobileMenu, addToast } from '@/store/slices/uiSlice';
 import { useGetUnreadCountQuery } from '@/store/api/chatApi';
 import { useGetNotificationUnreadCountQuery } from '@/store/api/notificationApi';
 import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
+import { useGetOwnProfileQuery } from '@/store/api/profileApi';
+import { getInitials } from '@/lib/utils';
 
 export function Header() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectCurrentUser);
+  const { data: profile } = useGetOwnProfileQuery(undefined, { skip: !user });
   
   const { data: chatUnread } = useGetUnreadCountQuery(undefined, { pollingInterval: 30000 });
   const { data: notificationUnread } = useGetNotificationUnreadCountQuery(undefined, { pollingInterval: 30000 });
@@ -136,7 +139,9 @@ export function Header() {
                 <Avatar className="w-8 h-8">
                   <AvatarImage src="" />
                   <AvatarFallback className="text-xs">
-                    {user?.profileId?.slice(0, 2) || 'PM'}
+                    {profile?.data?.firstName && profile?.data?.lastName
+                      ? getInitials(profile.data.firstName, profile.data.lastName)
+                      : user?.profileId?.slice(0, 2) || 'PM'}
                   </AvatarFallback>
                 </Avatar>
                 <ChevronDown className="w-4 h-4 text-text-muted hidden sm:block" />

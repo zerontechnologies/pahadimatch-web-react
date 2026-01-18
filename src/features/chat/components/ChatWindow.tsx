@@ -11,21 +11,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn, getInitials } from '@/lib/utils';
-import { useGetChatMessagesQuery, useSendMessageMutation, useMarkMessagesAsReadMutation, useGetChatListQuery } from '@/store/api/chatApi';
+import { useGetChatMessagesQuery, useSendMessageMutation, useMarkMessagesAsReadMutation, useGetChatListQuery, useGetPredefinedMessagesQuery } from '@/store/api/chatApi';
 import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectCurrentUser } from '@/store/slices/authSlice';
 import { addToast } from '@/store/slices/uiSlice';
-import type { Chat } from '@/types';
-
-// Predefined messages for non-subscribed users
-const PREDEFINED_MESSAGES = [
-  "Hi! I liked your profile.",
-  "Hello! Would you like to connect?",
-  "Hi there! I'm interested in knowing more about you.",
-  "Hello! I think we could be a good match.",
-  "Hi! Would you like to chat?",
-];
+import type { Chat, MessageType } from '@/types';
 
 interface ChatWindowProps {
   chat: Chat;
@@ -52,18 +43,23 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
   const [markAsRead] = useMarkMessagesAsReadMutation();
   const { data: membership } = useGetMembershipSummaryQuery();
+  const { data: predefinedMessagesData, isLoading: isLoadingPredefined } = useGetPredefinedMessagesQuery();
   
-  // Check if user can send custom messages
+  // Get predefined messages from API, fallback to empty array
+  const predefinedMessages = predefinedMessagesData?.data || [];
+  
+  // Check if user can send messages
   // Premium users can send custom messages to any chat they can see
+  // Non-premium users can only send predefined messages to connections
   // The backend will validate permissions (connection, membership, etc.)
   const isPremium = membership?.data?.isPremium || false;
-  // If user has premium membership, allow custom messages
   // Having a chat (realChatId) or connection chat means they can see this conversation
-  // The backend API will handle permission validation when sending
   const hasChat = !!realChatId || isConnectionChat;
   // Premium users with any chat can send custom messages
-  // Non-premium users must use predefined messages
+  // Non-premium users can only send predefined messages (not custom)
   const canSendCustomMessages = isPremium && hasChat;
+  // All users (premium or not) can send predefined messages to connections
+  const canSendPredefinedMessages = hasChat; // Connections can always send predefined messages
 
   const messages = data?.data || [];
 
@@ -91,8 +87,24 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
     const messageToSend = predefinedMessage || message.trim();
     if (!messageToSend) return;
 
-    // If not premium and trying to send custom message, show error
-    if (!canSendCustomMessages && !predefinedMessage) {
+    // Check if this is a predefined message
+    // If predefinedMessage parameter is provided, it's definitely a predefined message
+    // Otherwise, check if the typed message exactly matches a predefined message
+    const isPredefinedMessage = predefinedMessage !== undefined || predefinedMessages.includes(messageToSend);
+    const messageType: MessageType = isPredefinedMessage ? 'predefined' : 'custom';
+    
+    // If trying to send predefined message but not allowed (not connected), show error
+    if (isPredefinedMessage && !canSendPredefinedMessages) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Cannot Send Message',
+        message: 'You must be connected to send messages.',
+      }));
+      return;
+    }
+
+    // If not premium and trying to send custom message (not predefined), show error
+    if (!isPredefinedMessage && !canSendCustomMessages) {
       dispatch(addToast({
         type: 'error',
         title: 'Premium Required',
@@ -105,7 +117,10 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
     try {
       await sendMessage({
         profileId: chat.participant.profileId,
-        data: { content: messageToSend }
+        data: { 
+          content: messageToSend,
+          messageType: messageType
+        }
       }).unwrap();
       
       setMessage('');
@@ -135,10 +150,29 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
         message: 'Your message has been sent successfully',
       }));
     } catch (err: any) {
+      // Handle specific error codes from backend
+      const errorCode = err?.data?.code || err?.data?.error?.code;
+      const errorMessage = err?.data?.message || err?.data?.error?.details || 'Could not send message.';
+      
+      let title = 'Failed to send';
+      let message = errorMessage;
+      
+      if (errorCode === 'PREMIUM_REQUIRED') {
+        title = 'Premium Required';
+        message = 'Upgrade to premium to send custom messages. You can send predefined messages instead.';
+        setShowPredefinedMessages(true);
+      } else if (errorCode === 'INTEREST_REQUIRED') {
+        title = 'Connection Required';
+        message = 'Both users must accept interest before chatting.';
+      } else if (errorCode === 'INVALID_PREDEFINED_MESSAGE') {
+        title = 'Invalid Message';
+        message = 'Invalid predefined message. Please select from available options.';
+      }
+      
       dispatch(addToast({
         type: 'error',
-        title: 'Failed to send',
-        message: err?.data?.message || 'Could not send message. Make sure you are connected and have premium membership.',
+        title,
+        message,
       }));
     }
   };
@@ -269,24 +303,61 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
         </div>
       </ScrollArea>
 
-      {/* Predefined Messages (for non-premium users) */}
-      {!canSendCustomMessages && showPredefinedMessages && (
+      {/* Predefined Messages Quick Replies (always show for connections) */}
+      {canSendPredefinedMessages && predefinedMessages.length > 0 && !showPredefinedMessages && (
+        <div className="px-4 pt-2 pb-1 border-t border-border bg-champagne/20">
+          <p className="text-xs text-text-muted mb-2">Quick Messages:</p>
+          <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
+            {predefinedMessages.slice(0, 4).map((msg, idx) => (
+              <Button
+                key={idx}
+                size="sm"
+                variant="outline"
+                onClick={() => handleSend(msg)}
+                disabled={isSending || isLoadingPredefined}
+                className="text-xs whitespace-nowrap"
+              >
+                {msg}
+              </Button>
+            ))}
+            {predefinedMessages.length > 4 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowPredefinedMessages(true)}
+                className="text-xs text-primary"
+              >
+                Show more...
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Predefined Messages Full List (when "Show more" is clicked) */}
+      {canSendPredefinedMessages && showPredefinedMessages && (
         <div className="p-4 border-t border-border bg-champagne/30">
           <div className="space-y-2">
             <p className="text-xs text-text-muted mb-2">Select a predefined message:</p>
-            <div className="flex flex-wrap gap-2">
-              {PREDEFINED_MESSAGES.map((msg, idx) => (
-                <Button
-                  key={idx}
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleSend(msg)}
-                  disabled={isSending}
-                  className="text-xs"
-                >
-                  {msg}
-                </Button>
-              ))}
+            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+              {isLoadingPredefined ? (
+                <p className="text-xs text-text-muted">Loading messages...</p>
+              ) : predefinedMessages.length > 0 ? (
+                predefinedMessages.map((msg, idx) => (
+                  <Button
+                    key={idx}
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleSend(msg)}
+                    disabled={isSending}
+                    className="text-xs"
+                  >
+                    {msg}
+                  </Button>
+                ))
+              ) : (
+                <p className="text-xs text-text-muted">No predefined messages available</p>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -302,7 +373,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
 
       {/* Input */}
       <div className="p-4 border-t border-border bg-surface">
-        {!canSendCustomMessages && !showPredefinedMessages && (
+        {!canSendCustomMessages && canSendPredefinedMessages && !showPredefinedMessages && (
           <div className="mb-2 p-2 rounded-lg bg-warning/10 border border-warning/20">
             <p className="text-xs text-text-secondary text-center">
               Upgrade to premium to send custom messages. 
@@ -312,6 +383,13 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
               >
                 Use predefined messages
               </button>
+            </p>
+          </div>
+        )}
+        {!canSendPredefinedMessages && (
+          <div className="mb-2 p-2 rounded-lg bg-error/10 border border-error/20">
+            <p className="text-xs text-error text-center">
+              You must be connected to send messages.
             </p>
           </div>
         )}
@@ -333,14 +411,20 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
                 style={{ minHeight: '44px' }}
               />
             </div>
-          ) : (
+          ) : canSendPredefinedMessages ? (
             <div className="flex-1">
               <button
                 onClick={() => setShowPredefinedMessages(true)}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-champagne/50 text-sm text-text-muted text-left"
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-champagne/50 text-sm text-text-muted text-left hover:bg-champagne/70 transition-colors"
               >
                 Select a predefined message...
               </button>
+            </div>
+          ) : (
+            <div className="flex-1">
+              <div className="w-full px-4 py-2.5 rounded-xl border border-border bg-champagne/30 text-sm text-text-muted text-center">
+                Connect to send messages
+              </div>
             </div>
           )}
           {canSendCustomMessages && (

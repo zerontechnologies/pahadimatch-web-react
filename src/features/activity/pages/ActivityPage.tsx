@@ -163,17 +163,17 @@ export function ActivityPage() {
           ) : (receivedData?.data?.length || 0) > 0 ? (
             <div className="space-y-4">
               {receivedData?.data?.map((interest: any) => (
-                <Card key={interest.id}>
+                <Card key={interest.id} className="cursor-pointer hover:border-primary-200 transition-colors" onClick={() => window.location.href = `/profile/${interest.profile.profileId}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="w-14 h-14">
-                          <AvatarImage src={interest.profile.profilePhoto} />
-                          <AvatarFallback>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Avatar className="w-14 h-14 rounded-full">
+                          <AvatarImage src={interest.profile.profilePhoto} className="rounded-full object-cover" />
+                          <AvatarFallback className="rounded-full">
                             {getInitials('', interest.profile.lastName)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-semibold text-text">
                             {interest.profile.lastName}
                           </h3>
@@ -266,17 +266,17 @@ export function ActivityPage() {
           ) : (sentData?.data?.length || 0) > 0 ? (
             <div className="space-y-4">
               {sentData?.data?.map((interest: any) => (
-                <Card key={interest.id}>
+                <Card key={interest.id} className="cursor-pointer hover:border-primary-200 transition-colors" onClick={() => window.location.href = `/profile/${interest.profile.profileId}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="w-14 h-14">
-                          <AvatarImage src={interest.profile.profilePhoto} />
-                          <AvatarFallback>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Avatar className="w-14 h-14 rounded-full">
+                          <AvatarImage src={interest.profile.profilePhoto} className="rounded-full object-cover" />
+                          <AvatarFallback className="rounded-full">
                             {getInitials('', interest.profile.lastName)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-semibold text-text">
                             {interest.profile.lastName}
                           </h3>
@@ -292,7 +292,8 @@ export function ActivityPage() {
                         interest.status === 'accepted' ? 'success' :
                         interest.status === 'declined' ? 'error' : 'outline'
                       }>
-                        {interest.status}
+                        {interest.status === 'accepted' ? 'Connected' : 
+                         interest.status === 'declined' ? 'Declined' : 'Pending'}
                       </Badge>
                     </div>
                   </CardContent>
@@ -353,20 +354,23 @@ export function ActivityPage() {
           ) : (connectionsData?.data?.length || 0) > 0 ? (
             <div className="space-y-4">
               {connectionsData?.data?.map((connection: any) => (
-                <Card key={connection.profileId}>
+                <Card key={connection.profileId} className="cursor-pointer hover:border-primary-200 transition-colors" onClick={() => window.location.href = `/profile/${connection.profileId}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="w-14 h-14">
-                          <AvatarImage src={connection.profilePhoto} />
-                          <AvatarFallback>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Avatar className="w-14 h-14 rounded-full">
+                          <AvatarImage src={connection.profilePhoto} className="rounded-full object-cover" />
+                          <AvatarFallback className="rounded-full">
                             {getInitials('', connection.lastName)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-text">
-                            {connection.lastName}
-                          </h3>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-text">
+                              {connection.lastName}
+                            </h3>
+                            <Badge variant="success" className="text-xs">Connected</Badge>
+                          </div>
                           <p className="text-sm text-text-secondary">
                             {connection.age} yrs • {connection.city}
                             {connection.state && `, ${connection.state}`}
@@ -383,13 +387,14 @@ export function ActivityPage() {
                       </div>
                       <Button 
                         variant="outline" 
-                        size="sm" 
-                        asChild
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.location.href = `/chat?profileId=${connection.profileId}`;
+                        }}
                       >
-                        <Link to={`/chat?profileId=${connection.profileId}`}>
-                          <MessageSquare className="w-4 h-4 mr-1" />
-                          {connection.canMessage ? 'Message' : 'View Profile'}
-                        </Link>
+                        <MessageSquare className="w-4 h-4 mr-1" />
+                        {connection.canMessage ? 'Message' : 'View Profile'}
                       </Button>
                     </div>
                   </CardContent>
@@ -450,17 +455,17 @@ export function ActivityPage() {
           ) : (shortlistedData?.data?.length || 0) > 0 ? (
             <div className="space-y-4">
               {shortlistedData?.data?.map((profile: any) => (
-                <Card key={profile.id}>
+                <Card key={profile.id} className="cursor-pointer hover:border-primary-200 transition-colors" onClick={() => window.location.href = `/profile/${profile.profileId}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="w-14 h-14">
-                          <AvatarImage src={profile.profilePhoto} />
-                          <AvatarFallback>
+                      <div className="flex items-center gap-4 flex-1">
+                        <Avatar className="w-14 h-14 rounded-full">
+                          <AvatarImage src={profile.profilePhoto} className="rounded-full object-cover" />
+                          <AvatarFallback className="rounded-full">
                             {getInitials('', profile.lastName)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-semibold text-text">
                             {profile.lastName}
                           </h3>
@@ -474,7 +479,16 @@ export function ActivityPage() {
                           )}
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">View Profile</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.location.href = `/profile/${profile.profileId}`;
+                        }}
+                      >
+                        View Profile
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

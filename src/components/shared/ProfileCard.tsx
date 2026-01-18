@@ -12,7 +12,9 @@ import {
   CheckCircle2,
   Crown,
   Eye,
-  Lock
+  Lock,
+  Clock,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -205,15 +207,15 @@ export const ProfileCard = memo(function ProfileCard({
           className="flex gap-4 p-4 bg-surface rounded-xl border border-border hover:border-primary-200 hover:shadow-md transition-all duration-200"
         >
           {/* Photo */}
-          <Avatar className="w-20 h-20 rounded-xl">
+          <Avatar className="w-20 h-20 rounded-full">
             {canSeePhotos && profilePhoto ? (
-              <AvatarImage src={profilePhoto} />
+              <AvatarImage src={profilePhoto} className="rounded-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-champagne flex items-center justify-center">
+              <div className="w-full h-full bg-champagne flex items-center justify-center rounded-full">
                 <Lock className="w-8 h-8 text-text-muted" />
               </div>
             )}
-            <AvatarFallback className="rounded-xl text-lg">
+            <AvatarFallback className="rounded-full text-lg">
               {getInitials('', profile.lastName || '')}
             </AvatarFallback>
           </Avatar>
@@ -272,17 +274,38 @@ export const ProfileCard = memo(function ProfileCard({
             )}
 
             <div className="flex items-center gap-2 mt-3">
-              {!profile.alreadySentInterest && (
+              {profile.isConnected ? (
+                <Badge variant="success" className="px-3 py-1">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  Connected
+                </Badge>
+              ) : profile.alreadySentInterest ? (
+                <Badge variant={
+                  profile.sentInterestStatus === 'accepted' ? 'success' :
+                  profile.sentInterestStatus === 'declined' ? 'error' : 'outline'
+                } className="px-3 py-1">
+                  {profile.sentInterestStatus === 'accepted' ? (
+                    <>
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      Connected
+                    </>
+                  ) : profile.sentInterestStatus === 'declined' ? (
+                    <>
+                      <X className="w-3 h-3 mr-1" />
+                      Declined
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-3 h-3 mr-1" />
+                      Sent
+                    </>
+                  )}
+                </Badge>
+              ) : (
                 <Button size="sm" onClick={handleSendInterest} isLoading={isSendingInterest}>
                   <Heart className="w-4 h-4 mr-1" />
                   Send Interest
                 </Button>
-              )}
-              {profile.alreadySentInterest && (
-                <Badge variant={profile.sentInterestStatus === 'accepted' ? 'success' : 'outline'}>
-                  {profile.sentInterestStatus === 'accepted' ? 'Connected' : 
-                   profile.sentInterestStatus === 'declined' ? 'Declined' : 'Pending'}
-                </Badge>
               )}
               {profile.isConnected && (
                 <Button size="sm" variant="outline" onClick={() => navigate(`/chat/${profile.profileId}`)}>

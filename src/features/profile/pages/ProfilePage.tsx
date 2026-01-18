@@ -14,7 +14,15 @@ import {
   Ruler,
   Users as UsersIcon,
   Sparkles,
-  Moon
+  Moon,
+  Home,
+  Scale,
+  Smile,
+  Coffee,
+  Cigarette,
+  Wine,
+  Briefcase,
+  Droplet
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -118,9 +126,9 @@ export function ProfilePage() {
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Profile Photo */}
             <div className="flex-shrink-0">
-              <Avatar className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-primary-200">
-                <AvatarImage src={profilePhoto?.url} alt={`${profileData.firstName} ${profileData.lastName}`} />
-                <AvatarFallback className="text-3xl bg-primary-50 text-primary">
+              <Avatar className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-primary-200 rounded-full">
+                <AvatarImage src={profilePhoto?.url} alt={`${profileData.firstName} ${profileData.lastName}`} className="rounded-full object-cover" />
+                <AvatarFallback className="text-3xl bg-primary-50 text-primary rounded-full">
                   {getInitials(profileData.firstName, profileData.lastName)}
                 </AvatarFallback>
               </Avatar>
@@ -220,6 +228,44 @@ export function ProfilePage() {
                   </p>
                 </div>
                 <div>
+                  <label className="text-xs text-text-muted">Age</label>
+                  <p className="text-sm font-medium text-text mt-1">
+                    {age ? `${age} years` : 'Not set'}
+                  </p>
+                </div>
+                {profileData.height && (
+                  <div>
+                    <label className="text-xs text-text-muted">Height</label>
+                    <p className="text-sm font-medium text-text mt-1">
+                      {formatHeight(profileData.height)}
+                    </p>
+                  </div>
+                )}
+                {profileData.weight && (
+                  <div>
+                    <label className="text-xs text-text-muted">Weight</label>
+                    <p className="text-sm font-medium text-text mt-1">{profileData.weight} kg</p>
+                  </div>
+                )}
+                {profileData.bodyType && (
+                  <div>
+                    <label className="text-xs text-text-muted">Body Type</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.bodyType.replace('_', ' '))}</p>
+                  </div>
+                )}
+                {profileData.complexion && (
+                  <div>
+                    <label className="text-xs text-text-muted">Complexion</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.complexion.replace('_', ' '))}</p>
+                  </div>
+                )}
+                {profileData.physicalStatus && (
+                  <div>
+                    <label className="text-xs text-text-muted">Physical Status</label>
+                    <p className="text-sm font-medium text-text mt-1">{profileData.physicalStatus}</p>
+                  </div>
+                )}
+                <div>
                   <label className="text-xs text-text-muted">Marital Status</label>
                   <p className="text-sm font-medium text-text mt-1">
                     {profileData.maritalStatus ? capitalize(profileData.maritalStatus.replace('_', ' ')) : 'Not set'}
@@ -234,13 +280,55 @@ export function ProfilePage() {
                 {profileData.caste && (
                   <div>
                     <label className="text-xs text-text-muted">Caste</label>
-                    <p className="text-sm font-medium text-text mt-1">{profileData.caste}</p>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.caste)}</p>
+                  </div>
+                )}
+                {profileData.subCaste && (
+                  <div>
+                    <label className="text-xs text-text-muted">Sub Caste</label>
+                    <p className="text-sm font-medium text-text mt-1">{profileData.subCaste}</p>
+                  </div>
+                )}
+                {profileData.gothra && (
+                  <div>
+                    <label className="text-xs text-text-muted">Gothra</label>
+                    <p className="text-sm font-medium text-text mt-1">{profileData.gothra}</p>
                   </div>
                 )}
                 {profileData.motherTongue && (
                   <div>
                     <label className="text-xs text-text-muted">Mother Tongue</label>
                     <p className="text-sm font-medium text-text mt-1">{profileData.motherTongue}</p>
+                  </div>
+                )}
+                {(profileData.community || profileData.origin) && (
+                  <div>
+                    <label className="text-xs text-text-muted">Community</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.community || profileData.origin || '')}</p>
+                  </div>
+                )}
+                {profileData.accountCreatedBy && (
+                  <div>
+                    <label className="text-xs text-text-muted">Account Created By</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.accountCreatedBy)}</p>
+                  </div>
+                )}
+                {profileData.manglik && (
+                  <div>
+                    <label className="text-xs text-text-muted">Manglik</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.manglik.replace('_', ' '))}</p>
+                  </div>
+                )}
+                {profileData.birthTime && (
+                  <div>
+                    <label className="text-xs text-text-muted">Birth Time</label>
+                    <p className="text-sm font-medium text-text mt-1">{profileData.birthTime}</p>
+                  </div>
+                )}
+                {profileData.birthPlace && (
+                  <div>
+                    <label className="text-xs text-text-muted">Birth Place</label>
+                    <p className="text-sm font-medium text-text mt-1">{profileData.birthPlace}</p>
                   </div>
                 )}
               </div>
@@ -266,6 +354,12 @@ export function ProfilePage() {
                     <p className="text-xs text-text-secondary mt-1">{profileData.educationDetail}</p>
                   )}
                 </div>
+                {profileData.college && (
+                  <div>
+                    <label className="text-xs text-text-muted">College/University</label>
+                    <p className="text-sm font-medium text-text mt-1">{profileData.college}</p>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs text-text-muted">Occupation</label>
                   <p className="text-sm font-medium text-text mt-1">
@@ -317,13 +411,13 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Family & Lifestyle */}
-          {(profileData.familyType || profileData.diet || profileData.smoking || profileData.drinking) && (
+          {/* Family Information */}
+          {(profileData.familyType || profileData.familyStatus || profileData.fatherName || profileData.motherName || profileData.siblings !== undefined) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <UsersIcon className="w-5 h-5 text-primary" />
-                  Family & Lifestyle
+                  <Home className="w-5 h-5 text-primary" />
+                  Family Information
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -331,11 +425,85 @@ export function ProfilePage() {
                   {profileData.familyType && (
                     <div>
                       <label className="text-xs text-text-muted">Family Type</label>
-                      <p className="text-sm font-medium text-text mt-1">
-                        {capitalize(profileData.familyType.replace('_', ' '))}
-                      </p>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.familyType)}</p>
                     </div>
                   )}
+                  {profileData.familyStatus && (
+                    <div>
+                      <label className="text-xs text-text-muted">Family Status</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.familyStatus.replace('_', ' '))}</p>
+                    </div>
+                  )}
+                  {profileData.fatherName && (
+                    <div>
+                      <label className="text-xs text-text-muted">Father's Name</label>
+                      <p className="text-sm font-medium text-text mt-1">{profileData.fatherName}</p>
+                    </div>
+                  )}
+                  {profileData.fatherAlive && (
+                    <div>
+                      <label className="text-xs text-text-muted">Father's Status</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.fatherAlive)}</p>
+                    </div>
+                  )}
+                  {profileData.fatherEmploymentStatus && (
+                    <div>
+                      <label className="text-xs text-text-muted">Father's Employment</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.fatherEmploymentStatus.replace('_', ' '))}</p>
+                    </div>
+                  )}
+                  {profileData.fatherOccupation && (
+                    <div>
+                      <label className="text-xs text-text-muted">Father's Occupation</label>
+                      <p className="text-sm font-medium text-text mt-1">{profileData.fatherOccupation}</p>
+                    </div>
+                  )}
+                  {profileData.motherName && (
+                    <div>
+                      <label className="text-xs text-text-muted">Mother's Name</label>
+                      <p className="text-sm font-medium text-text mt-1">{profileData.motherName}</p>
+                    </div>
+                  )}
+                  {profileData.motherAlive && (
+                    <div>
+                      <label className="text-xs text-text-muted">Mother's Status</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.motherAlive)}</p>
+                    </div>
+                  )}
+                  {profileData.motherEmploymentStatus && (
+                    <div>
+                      <label className="text-xs text-text-muted">Mother's Employment</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profileData.motherEmploymentStatus.replace('_', ' '))}</p>
+                    </div>
+                  )}
+                  {profileData.motherOccupation && (
+                    <div>
+                      <label className="text-xs text-text-muted">Mother's Occupation</label>
+                      <p className="text-sm font-medium text-text mt-1">{profileData.motherOccupation}</p>
+                    </div>
+                  )}
+                  {profileData.siblings !== undefined && (
+                    <div>
+                      <label className="text-xs text-text-muted">Siblings</label>
+                      <p className="text-sm font-medium text-text mt-1">{profileData.siblings}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Lifestyle */}
+          {(profileData.diet || profileData.smoking || profileData.drinking) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smile className="w-5 h-5 text-primary" />
+                  Lifestyle
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 gap-4">
                   {profileData.diet && (
                     <div>
                       <label className="text-xs text-text-muted">Diet</label>
@@ -360,6 +528,27 @@ export function ProfilePage() {
                       </p>
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Hobbies */}
+          {profileData.hobbies && profileData.hobbies.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UsersIcon className="w-5 h-5 text-primary" />
+                  Hobbies & Interests
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {profileData.hobbies.map((hobby, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {hobby}
+                    </Badge>
+                  ))}
                 </div>
               </CardContent>
             </Card>

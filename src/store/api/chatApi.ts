@@ -6,14 +6,22 @@ import type {
   SendMessageRequest, 
   CanChatResponse, 
   UnreadCountResponse,
-  Pagination 
+  Pagination
 } from '@/types';
 
 export const chatApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Check If Can Chat
-    checkCanChat: builder.query<ApiResponse<CanChatResponse>, string>({
-      query: (profileId) => `/chat/can-chat/${profileId}`,
+    checkCanChat: builder.query<ApiResponse<CanChatResponse>, { profileId: string; messageType?: 'predefined' | 'custom' }>({
+      query: ({ profileId, messageType }) => {
+        const params = messageType ? `?messageType=${messageType}` : '';
+        return `/chat/can-chat/${profileId}${params}`;
+      },
+    }),
+    
+    // Get Predefined Messages
+    getPredefinedMessages: builder.query<ApiResponse<string[]>, void>({
+      query: () => '/chat/predefined-messages',
     }),
     
     // Get Chat List
@@ -81,5 +89,6 @@ export const {
   useMarkMessagesAsReadMutation,
   useDeleteMessageMutation,
   useGetUnreadCountQuery,
+  useGetPredefinedMessagesQuery,
 } = chatApi;
 

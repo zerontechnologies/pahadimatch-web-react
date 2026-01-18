@@ -20,6 +20,7 @@ export interface ChatMessage {
   status: MessageStatus;
   createdAt: string;
   isOwn?: boolean;
+  messageType?: MessageType; // 'predefined' or 'custom'
 }
 
 export interface Chat {
@@ -34,8 +35,11 @@ export interface Chat {
   unreadCount: number;
 }
 
+export type MessageType = 'predefined' | 'custom';
+
 export interface SendMessageRequest {
   content: string;
+  messageType?: MessageType; // Optional, defaults to 'custom'
 }
 
 export interface CanChatResponse {
@@ -54,6 +58,7 @@ export interface SocketNewMessage {
   senderId: string;
   senderProfileId: string;
   content: string;
+  messageType?: MessageType; // 'predefined' or 'custom'
   createdAt: string;
 }
 

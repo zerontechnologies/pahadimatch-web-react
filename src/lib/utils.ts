@@ -132,3 +132,8 @@ export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
+// Validate profile ID format (PM + 6 alphanumeric = 8 characters)
+export function isValidProfileId(profileId: string): boolean {
+  return /^PM[A-Z0-9]{6}$/.test(profileId);
+}
+

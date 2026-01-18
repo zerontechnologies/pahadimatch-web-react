@@ -8,6 +8,7 @@ import { DashboardLayout, ProtectedRoute, PublicRoute } from './components/layou
 import { Skeleton } from './components/ui/skeleton';
 
 // Lazy load routes for code splitting and better performance
+const LandingPage = lazy(() => import('./features/landing').then(m => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('./features/auth').then(m => ({ default: m.LoginPage })));
 const SignupPage = lazy(() => import('./features/auth').then(m => ({ default: m.SignupPage })));
 const VerifyOtpPage = lazy(() => import('./features/auth').then(m => ({ default: m.VerifyOtpPage })));
@@ -64,6 +65,16 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* Public Routes */}
+            <Route
+              path="/home"
+              element={
+                <PublicRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <LandingPage />
+                  </Suspense>
+                </PublicRoute>
+              }
+            />
             <Route
               path="/login"
               element={

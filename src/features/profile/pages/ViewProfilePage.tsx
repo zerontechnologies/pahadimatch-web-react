@@ -20,7 +20,18 @@ import {
   Camera,
   Sparkles,
   TrendingUp,
-  Info
+  Info,
+  Clock,
+  X,
+  Briefcase,
+  Home,
+  Users,
+  Droplet,
+  Scale,
+  Smile,
+  Coffee,
+  Cigarette,
+  Wine
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +54,7 @@ import { useGetMembershipSummaryQuery, useViewContactMutation } from '@/store/ap
 import { useAppDispatch } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
 import { formatHeight, formatIncome, getInitials, capitalize } from '@/lib/utils';
+import { PhotoGalleryModal } from '@/components/shared/PhotoGalleryModal';
 
 export function ViewProfilePage() {
   const { profileId } = useParams<{ profileId: string }>();
@@ -56,7 +68,7 @@ export function ViewProfilePage() {
   const [sendInterest, { isLoading: isSendingInterest }] = useSendInterestMutation();
   const [shortlistProfile] = useShortlistProfileMutation();
   const [removeFromShortlist] = useRemoveFromShortlistMutation();
-  const { data: canChatData } = useCheckCanChatQuery(profileId!, {
+  const { data: canChatData } = useCheckCanChatQuery({ profileId: profileId! }, {
     skip: !profileId,
   });
   const { data: membershipData } = useGetMembershipSummaryQuery();
@@ -67,6 +79,8 @@ export function ViewProfilePage() {
   const canChat = canChatData?.data?.allowed || false;
   const [localShortlisted, setLocalShortlisted] = useState(false);
   const [showKundaliMatch, setShowKundaliMatch] = useState(false);
+  const [photoGalleryOpen, setPhotoGalleryOpen] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const isPremium = membershipData?.data?.isPremium || false;
   const kundaliMatch = kundaliMatchData?.data;
   const contactsRemaining = membershipData?.data?.contactsRemaining || 0;
@@ -345,9 +359,9 @@ export function ViewProfilePage() {
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Profile Photo */}
             <div className="flex-shrink-0">
-              <Avatar className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-primary-200">
-                <AvatarImage src={profilePhoto?.url} alt={`${profile.firstName || ''} ${profile.lastName || ''}`} />
-                <AvatarFallback className="text-3xl bg-primary-50 text-primary">
+              <Avatar className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-primary-200 rounded-full">
+                <AvatarImage src={profilePhoto?.url} alt={`${profile.firstName || ''} ${profile.lastName || ''}`} className="rounded-full object-cover" />
+                <AvatarFallback className="text-3xl bg-primary-50 text-primary rounded-full">
                   {getInitials(profile.firstName || '', profile.lastName || '')}
                 </AvatarFallback>
               </Avatar>
@@ -364,8 +378,8 @@ export function ViewProfilePage() {
             {/* Profile Info */}
             <div className="flex-1 space-y-4">
               <div>
-                {/* Name - Premium Only */}
-                {profile.requiresPremiumForName || (!profile.firstName && !profile.lastName) ? (
+                {/* Name - Show if hasViewedContact or if name is available */}
+                {(profile.requiresPremiumForName && !profile.hasViewedContact) || (!profile.firstName && !profile.lastName && !profile.hasViewedContact) ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Lock className="w-5 h-5 text-text-muted" />
@@ -430,13 +444,42 @@ export function ViewProfilePage() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button
-                  onClick={handleSendInterest}
-                  isLoading={isSendingInterest}
-                  leftIcon={<Heart className="w-4 h-4" />}
-                >
-                  Send Interest
-                </Button>
+                {profile.isConnected ? (
+                  <Badge variant="success" className="px-4 py-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                    Connected
+                  </Badge>
+                ) : profile.alreadySentInterest ? (
+                  <Badge variant={
+                    profile.sentInterestStatus === 'accepted' ? 'success' :
+                    profile.sentInterestStatus === 'declined' ? 'error' : 'outline'
+                  } className="px-4 py-2 text-sm">
+                    {profile.sentInterestStatus === 'accepted' ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                        Connected
+                      </>
+                    ) : profile.sentInterestStatus === 'declined' ? (
+                      <>
+                        <X className="w-4 h-4 mr-1" />
+                        Declined
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="w-4 h-4 mr-1" />
+                        Sent
+                      </>
+                    )}
+                  </Badge>
+                ) : (
+                  <Button
+                    onClick={handleSendInterest}
+                    isLoading={isSendingInterest}
+                    leftIcon={<Heart className="w-4 h-4" />}
+                  >
+                    Send Interest
+                  </Button>
+                )}
                 {canChat && (
                   <Button
                     variant="outline"
@@ -483,6 +526,42 @@ export function ViewProfilePage() {
                   </p>
                 </div>
                 <div>
+                  <label className="text-xs text-text-muted">Date of Birth</label>
+                  <p className="text-sm font-medium text-text mt-1">
+                    {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Not set'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs text-text-muted">Age</label>
+                  <p className="text-sm font-medium text-text mt-1">
+                    {profile.age ? `${profile.age} years` : 'Not set'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs text-text-muted">Height</label>
+                  <p className="text-sm font-medium text-text mt-1">
+                    {profile.height ? formatHeight(profile.height) : 'Not set'}
+                  </p>
+                </div>
+                {profile.weight && (
+                  <div>
+                    <label className="text-xs text-text-muted">Weight</label>
+                    <p className="text-sm font-medium text-text mt-1">{profile.weight} kg</p>
+                  </div>
+                )}
+                {profile.bodyType && (
+                  <div>
+                    <label className="text-xs text-text-muted">Body Type</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profile.bodyType.replace('_', ' '))}</p>
+                  </div>
+                )}
+                {profile.complexion && (
+                  <div>
+                    <label className="text-xs text-text-muted">Complexion</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profile.complexion.replace('_', ' '))}</p>
+                  </div>
+                )}
+                <div>
                   <label className="text-xs text-text-muted">Marital Status</label>
                   <p className="text-sm font-medium text-text mt-1">
                     {profile.maritalStatus ? capitalize(profile.maritalStatus.replace('_', ' ')) : 'Not set'}
@@ -497,7 +576,43 @@ export function ViewProfilePage() {
                 {profile.caste && (
                   <div>
                     <label className="text-xs text-text-muted">Caste</label>
-                    <p className="text-sm font-medium text-text mt-1">{profile.caste}</p>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profile.caste)}</p>
+                  </div>
+                )}
+                {profile.subCaste && (
+                  <div>
+                    <label className="text-xs text-text-muted">Sub Caste</label>
+                    <p className="text-sm font-medium text-text mt-1">{profile.subCaste}</p>
+                  </div>
+                )}
+                {profile.gothra && (
+                  <div>
+                    <label className="text-xs text-text-muted">Gothra</label>
+                    <p className="text-sm font-medium text-text mt-1">{profile.gothra}</p>
+                  </div>
+                )}
+                {profile.motherTongue && (
+                  <div>
+                    <label className="text-xs text-text-muted">Mother Tongue</label>
+                    <p className="text-sm font-medium text-text mt-1">{profile.motherTongue}</p>
+                  </div>
+                )}
+                {(profile.community || profile.origin) && (
+                  <div>
+                    <label className="text-xs text-text-muted">Community</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profile.community || profile.origin || '')}</p>
+                  </div>
+                )}
+                {profile.accountCreatedBy && (
+                  <div>
+                    <label className="text-xs text-text-muted">Account Created By</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profile.accountCreatedBy)}</p>
+                  </div>
+                )}
+                {profile.manglik && (
+                  <div>
+                    <label className="text-xs text-text-muted">Manglik</label>
+                    <p className="text-sm font-medium text-text mt-1">{capitalize(profile.manglik.replace('_', ' '))}</p>
                   </div>
                 )}
               </div>
@@ -520,12 +635,30 @@ export function ViewProfilePage() {
                     {profile.education ? capitalize(profile.education.replace('_', ' ')) : 'Not set'}
                   </p>
                 </div>
+                {profile.educationDetail && (
+                  <div>
+                    <label className="text-xs text-text-muted">Education Detail</label>
+                    <p className="text-sm font-medium text-text mt-1">{profile.educationDetail}</p>
+                  </div>
+                )}
+                {profile.college && (
+                  <div>
+                    <label className="text-xs text-text-muted">College</label>
+                    <p className="text-sm font-medium text-text mt-1">{profile.college}</p>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs text-text-muted">Occupation</label>
                   <p className="text-sm font-medium text-text mt-1">
                     {profile.occupation ? capitalize(profile.occupation.replace('_', ' ')) : 'Not set'}
                   </p>
                 </div>
+                {profile.occupationDetail && (
+                  <div>
+                    <label className="text-xs text-text-muted">Occupation Detail</label>
+                    <p className="text-sm font-medium text-text mt-1">{profile.occupationDetail}</p>
+                  </div>
+                )}
                 {profile.company && (
                   <div>
                     <label className="text-xs text-text-muted">Company</label>
@@ -535,7 +668,10 @@ export function ViewProfilePage() {
                 <div>
                   <label className="text-xs text-text-muted">Annual Income</label>
                   <p className="text-sm font-medium text-text mt-1">
-                    {profile.incomeLocked ? (
+                    {/* If hasViewedContact, show income regardless of privacy */}
+                    {profile.hasViewedContact && profile.income ? (
+                      formatIncome(profile.income)
+                    ) : profile.incomeLocked ? (
                       <span className="flex items-center gap-1 text-text-muted">
                         <Lock className="w-3 h-3" />
                         Not disclosed
@@ -569,9 +705,150 @@ export function ViewProfilePage() {
                   <label className="text-xs text-text-muted">State</label>
                   <p className="text-sm font-medium text-text mt-1">{profile.state || 'Not set'}</p>
                 </div>
+                <div>
+                  <label className="text-xs text-text-muted">Country</label>
+                  <p className="text-sm font-medium text-text mt-1">{profile.country || 'Not set'}</p>
+                </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Family Information */}
+          {(profile.familyType || profile.familyStatus || profile.fatherName || profile.motherName || profile.siblings !== undefined) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Home className="w-5 h-5 text-primary" />
+                  Family Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {profile.familyType && (
+                    <div>
+                      <label className="text-xs text-text-muted">Family Type</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.familyType)}</p>
+                    </div>
+                  )}
+                  {profile.familyStatus && (
+                    <div>
+                      <label className="text-xs text-text-muted">Family Status</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.familyStatus.replace('_', ' '))}</p>
+                    </div>
+                  )}
+                  {profile.fatherName && (
+                    <div>
+                      <label className="text-xs text-text-muted">Father's Name</label>
+                      <p className="text-sm font-medium text-text mt-1">{profile.fatherName}</p>
+                    </div>
+                  )}
+                  {profile.fatherAlive && (
+                    <div>
+                      <label className="text-xs text-text-muted">Father's Status</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.fatherAlive)}</p>
+                    </div>
+                  )}
+                  {profile.fatherEmploymentStatus && (
+                    <div>
+                      <label className="text-xs text-text-muted">Father's Employment</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.fatherEmploymentStatus.replace('_', ' '))}</p>
+                    </div>
+                  )}
+                  {profile.fatherOccupation && (
+                    <div>
+                      <label className="text-xs text-text-muted">Father's Occupation</label>
+                      <p className="text-sm font-medium text-text mt-1">{profile.fatherOccupation}</p>
+                    </div>
+                  )}
+                  {profile.motherName && (
+                    <div>
+                      <label className="text-xs text-text-muted">Mother's Name</label>
+                      <p className="text-sm font-medium text-text mt-1">{profile.motherName}</p>
+                    </div>
+                  )}
+                  {profile.motherAlive && (
+                    <div>
+                      <label className="text-xs text-text-muted">Mother's Status</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.motherAlive)}</p>
+                    </div>
+                  )}
+                  {profile.motherEmploymentStatus && (
+                    <div>
+                      <label className="text-xs text-text-muted">Mother's Employment</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.motherEmploymentStatus.replace('_', ' '))}</p>
+                    </div>
+                  )}
+                  {profile.motherOccupation && (
+                    <div>
+                      <label className="text-xs text-text-muted">Mother's Occupation</label>
+                      <p className="text-sm font-medium text-text mt-1">{profile.motherOccupation}</p>
+                    </div>
+                  )}
+                  {profile.siblings !== undefined && (
+                    <div>
+                      <label className="text-xs text-text-muted">Siblings</label>
+                      <p className="text-sm font-medium text-text mt-1">{profile.siblings}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Lifestyle */}
+          {(profile.diet || profile.smoking || profile.drinking) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smile className="w-5 h-5 text-primary" />
+                  Lifestyle
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {profile.diet && (
+                    <div>
+                      <label className="text-xs text-text-muted">Diet</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.diet.replace('_', ' '))}</p>
+                    </div>
+                  )}
+                  {profile.smoking && (
+                    <div>
+                      <label className="text-xs text-text-muted">Smoking</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.smoking)}</p>
+                    </div>
+                  )}
+                  {profile.drinking && (
+                    <div>
+                      <label className="text-xs text-text-muted">Drinking</label>
+                      <p className="text-sm font-medium text-text mt-1">{capitalize(profile.drinking)}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Hobbies */}
+          {profile.hobbies && profile.hobbies.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  Hobbies & Interests
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {profile.hobbies.map((hobby, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {hobby}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* About Me */}
           {profile.aboutMe && (
@@ -624,29 +901,33 @@ export function ViewProfilePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Camera className="w-5 h-5 text-primary" />
-                  Photos
+                  Photos ({profile.photos.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {profile.photos.slice(0, 4).map((photo: any, index: number) => (
-                    <div
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {profile.photos.map((photo: any, index: number) => (
+                    <button
                       key={photo.url || index}
-                      className="aspect-square rounded-lg overflow-hidden border border-border"
+                      onClick={() => {
+                        setSelectedPhotoIndex(index);
+                        setPhotoGalleryOpen(true);
+                      }}
+                      className="aspect-square rounded-lg overflow-hidden border border-border hover:border-primary-300 hover:shadow-md transition-all cursor-pointer group"
                     >
                       <img
                         src={photo.url}
                         alt={`Photo ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        }}
                       />
-                    </div>
+                    </button>
                   ))}
                 </div>
-                {profile.photos.length > 4 && (
-                  <p className="text-xs text-text-muted text-center mt-2">
-                    +{profile.photos.length - 4} more photos
-                  </p>
-                )}
               </CardContent>
             </Card>
           ) : null}
@@ -660,7 +941,21 @@ export function ViewProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {profile.requiresPremiumForContact || profile.phoneLocked ? (
+              {/* If hasViewedContact, show everything regardless of privacy settings */}
+              {profile.hasViewedContact ? (
+                <>
+                  <div>
+                    <label className="text-xs text-text-muted">Phone Number</label>
+                    <p className="text-sm font-medium text-text mt-1">
+                      {profile.phone || 'Not available'}
+                    </p>
+                  </div>
+                  <Separator />
+                  <p className="text-xs text-text-muted">
+                    Contact information unlocked via View Contact.
+                  </p>
+                </>
+              ) : profile.requiresPremiumForContact || profile.phoneLocked ? (
                 <div className="text-center py-4">
                   <div className="w-12 h-12 mx-auto bg-champagne rounded-full flex items-center justify-center mb-3">
                     <Lock className="w-6 h-6 text-text-muted" />
@@ -673,6 +968,18 @@ export function ViewProfilePage() {
                       ? 'Upgrade to premium to view contact details'
                       : 'Connect with this profile to view contact details'}
                   </p>
+                  {profile.requiresPremiumForContact && isPremium && !profile.hasViewedContact && (
+                    <Button
+                      size="sm"
+                      variant="accent"
+                      onClick={handleViewContact}
+                      isLoading={isViewingContact}
+                      disabled={isViewingContact || contactsRemaining <= 0}
+                      leftIcon={<Phone className="w-4 h-4" />}
+                    >
+                      View Contact
+                    </Button>
+                  )}
                   {profile.requiresPremiumForContact && !isPremium && (
                     <Button
                       size="sm"
@@ -818,6 +1125,16 @@ export function ViewProfilePage() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Photo Gallery Modal */}
+      {profile.photos && profile.photos.length > 0 && (
+        <PhotoGalleryModal
+          photos={profile.photos}
+          isOpen={photoGalleryOpen}
+          onClose={() => setPhotoGalleryOpen(false)}
+          initialIndex={selectedPhotoIndex}
+        />
       )}
     </motion.div>
   );

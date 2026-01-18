@@ -12,6 +12,11 @@ export type Habit = 'yes' | 'no' | 'occasionally';
 export type BodyType = 'slim' | 'average' | 'athletic' | 'heavy';
 export type Complexion = 'very_fair' | 'fair' | 'wheatish' | 'dark';
 export type Origin = 'garhwali' | 'kumaoni' | 'jonsari' | 'other';
+export type Community = 'garhwali' | 'kumaoni' | 'jonsari' | 'other';
+export type Caste = 'brahmin' | 'rajput' | 'others';
+export type AccountCreatedBy = 'self' | 'parent' | 'sibling';
+export type ParentStatus = 'alive' | 'deceased';
+export type EmploymentStatus = 'working' | 'retired' | 'not_working';
 
 export interface Profile {
   // Identifiers
@@ -35,11 +40,13 @@ export interface Profile {
   maritalStatus: MaritalStatus;
   motherTongue?: string;
   religion: Religion;
-  caste?: string;
+  caste?: Caste; // NEW: Now enum (brahmin, rajput, others)
   subCaste?: string;
   gothra?: string;
   manglik?: ManglikStatus;
-  origin?: Origin; // NEW: garhwali, kumaoni, jonsari, other
+  origin?: Origin; // Legacy - kept for backward compatibility
+  community?: Community; // NEW: garhwali, kumaoni, jonsari, other
+  accountCreatedBy?: AccountCreatedBy; // NEW: self, parent, sibling
   
   // Education & Career
   education: Education;
@@ -59,7 +66,11 @@ export interface Profile {
   familyType?: FamilyType;
   familyStatus?: FamilyStatus;
   fatherOccupation?: string;
+  fatherAlive?: ParentStatus; // NEW: alive, deceased
+  fatherEmploymentStatus?: EmploymentStatus; // NEW: working, retired, not_working
   motherOccupation?: string;
+  motherAlive?: ParentStatus; // NEW: alive, deceased
+  motherEmploymentStatus?: EmploymentStatus; // NEW: working, retired, not_working
   siblings?: number;
   
   // Lifestyle
@@ -135,6 +146,12 @@ export interface ViewProfileResponse {
   photos?: ProfilePhoto[];
   photosLocked?: boolean;
   isShortlisted?: boolean;
+  hasViewedContact?: boolean; // Premium users who viewed contact can see everything
+  isConnected?: boolean; // Both users accepted interest
+  alreadySentInterest?: boolean; // Current user sent interest
+  sentInterestStatus?: 'pending' | 'accepted' | 'declined';
+  receivedInterest?: boolean; // This profile sent interest to current user
+  receivedInterestStatus?: 'pending' | 'accepted' | 'declined';
 }
 
 export interface ProfilePhoto {

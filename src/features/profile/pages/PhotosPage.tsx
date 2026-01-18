@@ -44,6 +44,9 @@ export function PhotosPage() {
   const photos = photosData?.data || [];
   const [draggedPhoto, setDraggedPhoto] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [settingProfilePhotoId, setSettingProfilePhotoId] = useState<string | null>(null);
+  const [togglingPrivacyId, setTogglingPrivacyId] = useState<string | null>(null);
   const [reorderedPhotos, setReorderedPhotos] = useState<Photo[]>(photos);
 
   // Update reordered photos when API data changes
@@ -118,6 +121,15 @@ export function PhotosPage() {
   });
 
   const handleDelete = async (photoId: string) => {
+    if (!photoId) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Photo ID is missing. Please refresh the page and try again.',
+      }));
+      return;
+    }
+    setDeletingPhotoId(photoId);
     try {
       await deletePhoto(photoId).unwrap();
       dispatch(addToast({
@@ -127,15 +139,28 @@ export function PhotosPage() {
       }));
       setDeleteConfirmId(null);
     } catch (err: any) {
+      const errorMessage = err?.data?.message || err?.data?.error?.details || 'Failed to delete photo';
       dispatch(addToast({
         type: 'error',
         title: 'Delete Failed',
-        message: err?.data?.message || 'Failed to delete photo',
+        message: errorMessage,
       }));
+      console.error('Delete photo error:', err);
+    } finally {
+      setDeletingPhotoId(null);
     }
   };
 
   const handleSetProfilePhoto = async (photoId: string) => {
+    if (!photoId) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Photo ID is missing. Please refresh the page and try again.',
+      }));
+      return;
+    }
+    setSettingProfilePhotoId(photoId);
     try {
       await setProfilePhoto(photoId).unwrap();
       dispatch(addToast({
@@ -144,15 +169,28 @@ export function PhotosPage() {
         message: 'Your profile photo has been updated',
       }));
     } catch (err: any) {
+      const errorMessage = err?.data?.message || err?.data?.error?.details || 'Failed to set profile photo';
       dispatch(addToast({
         type: 'error',
         title: 'Update Failed',
-        message: err?.data?.message || 'Failed to set profile photo',
+        message: errorMessage,
       }));
+      console.error('Set profile photo error:', err);
+    } finally {
+      setSettingProfilePhotoId(null);
     }
   };
 
   const handleTogglePrivacy = async (photoId: string) => {
+    if (!photoId) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Photo ID is missing. Please refresh the page and try again.',
+      }));
+      return;
+    }
+    setTogglingPrivacyId(photoId);
     try {
       await togglePhotoPrivacy(photoId).unwrap();
       dispatch(addToast({
@@ -161,11 +199,15 @@ export function PhotosPage() {
         message: 'Photo privacy has been updated',
       }));
     } catch (err: any) {
+      const errorMessage = err?.data?.message || err?.data?.error?.details || 'Failed to update photo privacy';
       dispatch(addToast({
         type: 'error',
         title: 'Update Failed',
-        message: err?.data?.message || 'Failed to update photo privacy',
+        message: errorMessage,
       }));
+      console.error('Toggle privacy error:', err);
+    } finally {
+      setTogglingPrivacyId(null);
     }
   };
 
@@ -214,6 +256,20 @@ export function PhotosPage() {
   const sortedPhotos = [...reorderedPhotos].sort((a, b) => (a.order || 0) - (b.order || 0));
   const canUploadMore = photos.length < PHOTO_CONSTRAINTS.maxPhotos;
   const needsMorePhotos = (requirements?.data?.count || 0) < PHOTO_CONSTRAINTS.minPhotos;
+
+  // Helper to get photo ID - handle both Photo and ProfilePhoto types
+  // Backend expects MongoDB ObjectId, so prefer _id if available, otherwise use id
+  const getPhotoId = (photo: Photo): string | null => {
+    // Prefer _id (MongoDB ObjectId) if available, as backend expects ObjectId format
+    if ((photo as any)._id) {
+      return (photo as any)._id;
+    }
+    // Fallback to id field
+    if (photo.id) {
+      return photo.id;
+    }
+    return null;
+  };
 
   return (
     <motion.div
@@ -290,22 +346,24 @@ export function PhotosPage() {
       ) : sortedPhotos.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <AnimatePresence>
-            {sortedPhotos.map((photo, index) => (
+            {sortedPhotos.map((photo, index) => {
+              const photoId = getPhotoId(photo);
+              return (
               <motion.div
-                key={photo.id}
+                key={photoId || `photo-${index}`}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                draggable
-                onDragStart={() => handleDragStart(photo.id)}
-                onDragOver={(e) => handleDragOver(e, photo.id)}
+                draggable={!!photoId}
+                onDragStart={() => photoId && handleDragStart(photoId)}
+                onDragOver={(e) => photoId && handleDragOver(e, photoId)}
                 onDragEnd={handleDragEnd}
                 className={cn(
                   'group relative aspect-square rounded-xl overflow-hidden border-2 transition-all',
                   photo.isProfilePhoto
                     ? 'border-accent shadow-lg'
                     : 'border-border hover:border-primary-200',
-                  draggedPhoto === photo.id && 'opacity-50'
+                  draggedPhoto === photoId && 'opacity-50'
                 )}
               >
                 <img
@@ -314,38 +372,66 @@ export function PhotosPage() {
                   className="w-full h-full object-cover"
                 />
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="absolute top-2 left-2 flex gap-2">
-                    {photo.isProfilePhoto && (
-                      <Badge variant="gold" className="text-xs">
-                        <Star className="w-3 h-3 mr-1 fill-current" />
-                        Profile
-                      </Badge>
-                    )}
-                    {photo.isPrivate && (
-                      <Badge variant="outline" className="text-xs bg-black/50 text-white border-white/30">
-                        <EyeOff className="w-3 h-3 mr-1" />
-                        Private
-                      </Badge>
-                    )}
-                  </div>
+                {/* Badges - Always visible */}
+                <div className="absolute top-2 left-2 flex gap-2 z-10">
+                  {photo.isProfilePhoto && (
+                    <Badge variant="gold" className="text-xs">
+                      <Star className="w-3 h-3 mr-1 fill-current" />
+                      Profile
+                    </Badge>
+                  )}
+                  {photo.isPrivate && (
+                    <Badge variant="outline" className="text-xs bg-black/50 text-white border-white/30">
+                      <EyeOff className="w-3 h-3 mr-1" />
+                      Private
+                    </Badge>
+                  )}
+                </div>
 
-                  <div className="absolute bottom-2 left-2 right-2 flex gap-2">
+                {/* Overlay - Always visible on mobile, hover on desktop */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                  {/* Action Buttons */}
+                  <div className="absolute bottom-2 left-2 right-2 flex gap-2 z-20">
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="flex-1"
-                      onClick={() => handleSetProfilePhoto(photo.id)}
-                      disabled={photo.isProfilePhoto}
+                      className="flex-1 bg-white/95 hover:bg-white text-text shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (photoId && !photo.isProfilePhoto) {
+                          handleSetProfilePhoto(photoId);
+                        }
+                      }}
+                      disabled={
+                        !photoId || 
+                        photo.isProfilePhoto || 
+                        settingProfilePhotoId === photoId ||
+                        deletingPhotoId === photoId ||
+                        togglingPrivacyId === photoId
+                      }
+                      isLoading={settingProfilePhotoId === photoId}
                     >
                       <Star className={cn('w-4 h-4', photo.isProfilePhoto && 'fill-current')} />
                     </Button>
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="flex-1"
-                      onClick={() => handleTogglePrivacy(photo.id)}
+                      className="flex-1 bg-white/95 hover:bg-white text-text shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (photoId) {
+                          handleTogglePrivacy(photoId);
+                        }
+                      }}
+                      disabled={
+                        !photoId || 
+                        togglingPrivacyId === photoId ||
+                        deletingPhotoId === photoId ||
+                        settingProfilePhotoId === photoId
+                      }
+                      isLoading={togglingPrivacyId === photoId}
                     >
                       {photo.isPrivate ? (
                         <EyeOff className="w-4 h-4" />
@@ -356,14 +442,28 @@ export function PhotosPage() {
                     <Button
                       size="sm"
                       variant="danger"
-                      onClick={() => setDeleteConfirmId(photo.id)}
+                      className="flex-1 shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (photoId) {
+                          setDeleteConfirmId(photoId);
+                        }
+                      }}
+                      disabled={
+                        !photoId || 
+                        deletingPhotoId === photoId ||
+                        settingProfilePhotoId === photoId ||
+                        togglingPrivacyId === photoId
+                      }
+                      isLoading={deletingPhotoId === photoId}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
 
                   {/* Drag Handle */}
-                  <div className="absolute top-2 right-2">
+                  <div className="absolute top-2 right-2 z-10">
                     <GripVertical className="w-5 h-5 text-white/70" />
                   </div>
                 </div>
@@ -373,7 +473,8 @@ export function PhotosPage() {
                   {index + 1}
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </AnimatePresence>
         </div>
       ) : (
@@ -384,12 +485,7 @@ export function PhotosPage() {
             <p className="text-sm text-text-muted mb-6">
               Upload at least {PHOTO_CONSTRAINTS.minPhotos} photos to complete your profile
             </p>
-            {canUploadMore && (
-              <Button onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}>
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Photos
-              </Button>
-            )}
+            {/* Upload area is already shown above when canUploadMore is true, so no need for duplicate button */}
           </CardContent>
         </Card>
       )}

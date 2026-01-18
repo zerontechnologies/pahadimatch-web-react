@@ -1,6 +1,7 @@
 // ===== PHOTO TYPES =====
 export interface Photo {
   id: string;
+  _id?: string; // MongoDB ObjectId (if backend uses this instead of id)
   url: string;
   isProfilePhoto: boolean;
   isPrivate: boolean;
