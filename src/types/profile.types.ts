@@ -35,6 +35,7 @@ export interface Profile {
   weight?: number;
   bodyType?: BodyType;
   complexion?: Complexion;
+  physicalStatus?: string;
   
   // Personal
   maritalStatus: MaritalStatus;
@@ -47,6 +48,8 @@ export interface Profile {
   origin?: Origin; // Legacy - kept for backward compatibility
   community?: Community; // NEW: garhwali, kumaoni, jonsari, other
   accountCreatedBy?: AccountCreatedBy; // NEW: self, parent, sibling
+  birthTime?: string;
+  birthPlace?: string;
   
   // Education & Career
   education: Education;
@@ -65,9 +68,11 @@ export interface Profile {
   // Family
   familyType?: FamilyType;
   familyStatus?: FamilyStatus;
+  fatherName?: string;
   fatherOccupation?: string;
   fatherAlive?: ParentStatus; // NEW: alive, deceased
   fatherEmploymentStatus?: EmploymentStatus; // NEW: working, retired, not_working
+  motherName?: string;
   motherOccupation?: string;
   motherAlive?: ParentStatus; // NEW: alive, deceased
   motherEmploymentStatus?: EmploymentStatus; // NEW: working, retired, not_working
@@ -110,6 +115,7 @@ export interface ViewProfileResponse {
   weight?: number;
   bodyType?: BodyType;
   complexion?: Complexion;
+  physicalStatus?: string;
   maritalStatus?: MaritalStatus;
   motherTongue?: string;
   religion?: Religion;
@@ -117,6 +123,11 @@ export interface ViewProfileResponse {
   subCaste?: string;
   gothra?: string;
   manglik?: ManglikStatus;
+  origin?: Origin;
+  community?: Community;
+  accountCreatedBy?: AccountCreatedBy;
+  birthTime?: string;
+  birthPlace?: string;
   education?: Education;
   educationDetail?: string;
   college?: string;
@@ -130,8 +141,14 @@ export interface ViewProfileResponse {
   country?: string;
   familyType?: FamilyType;
   familyStatus?: FamilyStatus;
+  fatherName?: string;
   fatherOccupation?: string;
+  fatherAlive?: ParentStatus;
+  fatherEmploymentStatus?: EmploymentStatus;
+  motherName?: string;
   motherOccupation?: string;
+  motherAlive?: ParentStatus;
+  motherEmploymentStatus?: EmploymentStatus;
   siblings?: number;
   diet?: Diet;
   smoking?: Habit;

@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VerificationBadge } from '@/components/shared/VerificationBadge';
 import { 
   useGetReceivedInterestsQuery, 
   useGetSentInterestsQuery,
@@ -20,7 +21,6 @@ import {
   useGetConnectionsQuery,
   useGetInterestLimitQuery
 } from '@/store/api/activityApi';
-import { Link } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
 import { useAppDispatch } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
@@ -174,8 +174,9 @@ export function ActivityPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-text">
+                          <h3 className="font-semibold text-text flex items-center gap-1">
                             {interest.profile.lastName}
+                            <VerificationBadge isVerified={interest.profile.isVerified} size="sm" />
                           </h3>
                           <p className="text-sm text-text-secondary">
                             {interest.profile.age} yrs • {interest.profile.city}
@@ -277,8 +278,9 @@ export function ActivityPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-text">
+                          <h3 className="font-semibold text-text flex items-center gap-1">
                             {interest.profile.lastName}
+                            <VerificationBadge isVerified={interest.profile.isVerified} size="sm" />
                           </h3>
                           <p className="text-sm text-text-secondary">
                             {interest.profile.age} yrs • {interest.profile.city}
@@ -366,8 +368,9 @@ export function ActivityPage() {
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-text">
+                            <h3 className="font-semibold text-text flex items-center gap-1">
                               {connection.lastName}
+                              <VerificationBadge isVerified={connection.isVerified} size="sm" />
                             </h3>
                             <Badge variant="success" className="text-xs">Connected</Badge>
                           </div>
@@ -466,8 +469,9 @@ export function ActivityPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-text">
+                          <h3 className="font-semibold text-text flex items-center gap-1">
                             {profile.lastName}
+                            <VerificationBadge isVerified={profile.isVerified} size="sm" />
                           </h3>
                           <p className="text-sm text-text-secondary">
                             {profile.age} yrs • {profile.city}
@@ -497,8 +501,8 @@ export function ActivityPage() {
           ) : (
             <EmptyState
               icon={Bookmark}
-              title="No shortlisted profiles"
-              description="Save interesting profiles here for quick access"
+              title="No profile shortlisted"
+              description="Shortlist profiles you like to find them here quickly"
             />
           )}
           {/* Pagination */}
@@ -558,8 +562,9 @@ export function ActivityPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-semibold text-text">
+                          <h3 className="font-semibold text-text flex items-center gap-1">
                             {profile.lastName}
+                            <VerificationBadge isVerified={profile.isVerified} size="sm" />
                           </h3>
                           <p className="text-xs text-text-muted">
                             Blocked {formatTimeAgo(profile.blockedAt)}

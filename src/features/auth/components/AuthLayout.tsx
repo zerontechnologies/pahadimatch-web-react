@@ -44,7 +44,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
             {/* Features */}
             <div className="grid grid-cols-2 gap-3 lg:gap-4 pt-4 lg:pt-6">
               {[
-                { title: '50K+', desc: 'Verified Profiles' },
+                { title: 'Trusted', desc: 'Authentic community' },
                 { title: '98%', desc: 'Happiness Rate' },
                 { title: '100%', desc: 'Privacy Assured' },
                 { title: '24/7', desc: 'Support Available' },

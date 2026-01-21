@@ -17,6 +17,7 @@ export interface Interest {
     age: number;
     city: string;
     profilePhoto?: string;
+    isVerified?: boolean;
   };
 }
 
@@ -47,6 +48,7 @@ export interface ShortlistedProfile {
   age: number;
   city: string;
   profilePhoto?: string;
+  isVerified?: boolean;
   note?: string;
   shortlistedAt: string;
 }
@@ -59,6 +61,7 @@ export interface BlockRequest {
 export interface BlockedProfile {
   profileId: string;
   lastName: string; // Only lastName
+  isVerified?: boolean;
   blockedAt: string;
   reason?: string;
 }
@@ -74,6 +77,7 @@ export interface Connection {
   occupation?: string;
   religion?: string;
   profilePhoto?: string; // Always visible for connections
+   isVerified?: boolean;
   connectedAt: string;
   canMessage: boolean;
   canSendPredefinedMessages: boolean;

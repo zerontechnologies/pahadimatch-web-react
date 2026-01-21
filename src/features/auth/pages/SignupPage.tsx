@@ -12,7 +12,6 @@ import { addToast } from '@/store/slices/uiSlice';
 import { isValidPhone } from '@/lib/utils';
 
 const benefits = [
-  { icon: Users, text: '50,000+ verified profiles from Pahadi community' },
   { icon: Shield, text: 'Privacy-first approach with controlled visibility' },
   { icon: Heart, text: 'Smart matching based on preferences & values' },
 ];

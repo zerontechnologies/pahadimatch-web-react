@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { VerificationBadge } from '@/components/shared/VerificationBadge';
 import { cn, formatTimeAgo, getInitials, truncateText } from '@/lib/utils';
 import type { Chat } from '@/types';
 
@@ -41,10 +42,11 @@ export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps)
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-medium text-text truncate">
+              <span className="font-medium text-text truncate flex items-center gap-1">
                 {chat.participant.hasViewedContact && chat.participant.firstName && chat.participant.lastName
                   ? `${chat.participant.firstName} ${chat.participant.lastName}`
                   : chat.participant.lastName || chat.participant.profileId}
+                <VerificationBadge isVerified={chat.participant.isVerified} size="sm" />
               </span>
               <span className="text-xs text-text-muted flex-shrink-0">
                 {formatTimeAgo(chat.lastMessageAt)}

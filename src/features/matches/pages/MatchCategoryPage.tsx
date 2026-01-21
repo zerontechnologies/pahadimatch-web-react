@@ -8,7 +8,7 @@ import { ProfileCardSkeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useGetMatchesByCategoryQuery } from '@/store/api/matchApi';
 import { MATCH_CATEGORIES, type MatchCategory } from '@/types';
-import { Users } from 'lucide-react';
+import { Users, Bookmark } from 'lucide-react';
 
 export function MatchCategoryPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -69,10 +69,6 @@ export function MatchCategoryPage() {
               <List className="w-4 h-4" />
             </button>
           </div>
-          <Button variant="outline" size="sm">
-            <SlidersHorizontal className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
         </div>
       </div>
 
@@ -139,13 +135,21 @@ export function MatchCategoryPage() {
         </>
       ) : (
         <EmptyState
-          icon={Users}
-          title="No matches found"
-          description="We couldn't find any profiles matching this category. Try updating your preferences."
-          action={{
-            label: 'Update Preferences',
-            onClick: () => {},
-          }}
+          icon={categoryId === 'shortlisted_profiles' ? Bookmark : Users}
+          title={categoryId === 'shortlisted_profiles' ? 'No profile shortlisted' : 'No matches found'}
+          description={
+            categoryId === 'shortlisted_profiles'
+              ? 'Shortlist profiles you like to find them here quickly'
+              : "We couldn't find any profiles matching this category. Try updating your preferences."
+          }
+          action={
+            categoryId === 'shortlisted_profiles'
+              ? undefined
+              : {
+                  label: 'Update Preferences',
+                  onClick: () => {},
+                }
+          }
         />
       )}
     </motion.div>

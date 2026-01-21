@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send, MoreVertical, Phone, Video, Info, Smile } from 'lucide-react';
+import { ArrowLeft, Send, MoreVertical, Info, Smile, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { VerificationBadge } from '@/components/shared/VerificationBadge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   DropdownMenu,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn, getInitials } from '@/lib/utils';
 import { useGetChatMessagesQuery, useSendMessageMutation, useMarkMessagesAsReadMutation, useGetChatListQuery, useGetPredefinedMessagesQuery } from '@/store/api/chatApi';
+import { useBlockProfileMutation } from '@/store/api/activityApi';
 import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectCurrentUser } from '@/store/slices/authSlice';
@@ -44,6 +46,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   const [markAsRead] = useMarkMessagesAsReadMutation();
   const { data: membership } = useGetMembershipSummaryQuery();
   const { data: predefinedMessagesData, isLoading: isLoadingPredefined } = useGetPredefinedMessagesQuery();
+  const [blockProfile, { isLoading: isBlocking }] = useBlockProfileMutation();
   
   // Get predefined messages from API, fallback to empty array
   const predefinedMessages = predefinedMessagesData?.data || [];
@@ -62,6 +65,34 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   const canSendPredefinedMessages = hasChat; // Connections can always send predefined messages
 
   const messages = data?.data || [];
+
+  const handleBlockUser = async () => {
+    const profileId = chat?.participant?.profileId;
+    if (!profileId) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Unable to block',
+        message: 'Profile not found for this chat',
+      }));
+      return;
+    }
+    try {
+      await blockProfile({ profileId, reason: 'blocked_from_chat' }).unwrap();
+      dispatch(addToast({
+        type: 'success',
+        title: 'User blocked',
+        message: 'This user has been blocked.',
+      }));
+      await refetchChatList();
+      onBack?.();
+    } catch (err: any) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Block failed',
+        message: err?.data?.message || 'Could not block user',
+      }));
+    }
+  };
 
   // Memoize messages to prevent unnecessary re-renders
   const memoizedMessages = useMemo(() => messages, [messages.length, messages[messages.length - 1]?.id]);
@@ -202,10 +233,11 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="font-semibold text-text">
+            <h3 className="font-semibold text-text flex items-center gap-1">
               {chat.participant.hasViewedContact && chat.participant.firstName && chat.participant.lastName
                 ? `${chat.participant.firstName} ${chat.participant.lastName}`
                 : chat.participant.lastName || chat.participant.profileId}
+              <VerificationBadge isVerified={chat.participant.isVerified} size="sm" />
             </h3>
             <p className="text-xs text-text-muted">
               {chat.participant.isOnline ? (
@@ -218,12 +250,6 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
         </div>
 
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <Phone className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <Video className="w-4 h-4" />
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -235,8 +261,9 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
                 <Info className="w-4 h-4 mr-2" />
                 View Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-error">
-                Block User
+              <DropdownMenuItem className="text-error" onClick={handleBlockUser} disabled={isBlocking}>
+                <Shield className="w-4 h-4 mr-2" />
+                {isBlocking ? 'Blocking...' : 'Block User'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -59,6 +59,7 @@ export function ChatPage() {
           isOnline: false,
           hasViewedContact: false, // Will be updated from API if available
           isConnected: true, // Connection means interest is accepted
+            isVerified: conn.isVerified,
         },
         lastMessage: {
           content: 'Start a conversation...',

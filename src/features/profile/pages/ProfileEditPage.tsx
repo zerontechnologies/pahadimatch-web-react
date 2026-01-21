@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -95,13 +96,6 @@ const HABIT_OPTIONS = [
   { value: 'occasionally', label: 'Occasionally' },
 ];
 
-const ORIGIN_OPTIONS = [
-  { value: 'garhwali', label: 'Garhwali' },
-  { value: 'kumaoni', label: 'Kumaoni' },
-  { value: 'jonsari', label: 'Jonsari' },
-  { value: 'other', label: 'Other' },
-];
-
 const COMMUNITY_OPTIONS = [
   { value: 'garhwali', label: 'Garhwali' },
   { value: 'kumaoni', label: 'Kumaoni' },
@@ -147,13 +141,28 @@ export function ProfileEditPage() {
   const { data: profile, isLoading: profileLoading } = useGetOwnProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
 
-  const [formData, setFormData] = useState<ProfileCreateRequest>({});
+  const [formData, setFormData] = useState<ProfileCreateRequest>({
+    country: 'India',
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Load profile data into form
   useEffect(() => {
     if (profile?.data) {
-      const profileData: ProfileCreateRequest = { ...profile.data };
+      // Handle different API response structures
+      let rawData: any = profile.data;
+      
+      // Check if data is nested (e.g., { profile: {...} })
+      if (rawData && typeof rawData === 'object' && 'profile' in rawData) {
+        rawData = rawData.profile;
+      }
+      
+      // If still not valid, try direct access
+      if (!rawData || typeof rawData !== 'object') {
+        return;
+      }
+      
+      const profileData: ProfileCreateRequest = { ...rawData };
       
       // Convert dateOfBirth from ISO string to YYYY-MM-DD format for date input
       if (profileData.dateOfBirth) {
@@ -172,51 +181,98 @@ export function ProfileEditPage() {
       }
       
       // Ensure all string fields are properly set (handle null/undefined)
-      const stringFields: (keyof ProfileCreateRequest)[] = [
+      const stringFields: Array<keyof ProfileCreateRequest> = [
         'firstName', 'lastName', 'city', 'state', 'country', 
         'educationDetail', 'college', 'occupationDetail', 'company',
-        'caste', 'motherTongue', 'fatherName', 'fatherOccupation', 
-        'motherName', 'motherOccupation', 'gothra', 'subCaste', 'aboutMe'
-      ];
+        'caste', 'motherTongue', 'fatherOccupation', 
+        'motherOccupation', 'gothra', 'subCaste', 'aboutMe'
+      ] as Array<keyof ProfileCreateRequest>;
+      
+      // Handle fatherName and motherName separately since they're optional string fields
+      if (profileData.fatherName !== null && profileData.fatherName !== undefined) {
+        profileData.fatherName = String(profileData.fatherName).trim();
+      }
+      if (profileData.motherName !== null && profileData.motherName !== undefined) {
+        profileData.motherName = String(profileData.motherName).trim();
+      }
       
       stringFields.forEach(field => {
         if (profileData[field] === null || profileData[field] === undefined) {
           profileData[field] = '' as any;
         }
       });
+
+      // Normalize numeric fields that may come as strings
+      const numericFields: Array<keyof ProfileCreateRequest> = ['height', 'weight', 'income', 'siblings'];
+      numericFields.forEach((field) => {
+        const value = profileData[field] as any;
+        if (value !== null && value !== undefined && value !== '') {
+          const parsed = Number(value);
+          profileData[field] = isNaN(parsed) ? undefined as any : parsed as any;
+        }
+      });
       
-      // Explicitly ensure enum/select fields are set correctly as strings
-      // Gender - ensure it's a valid value and is set
-      if (profileData.gender !== null && profileData.gender !== undefined) {
-        profileData.gender = String(profileData.gender).trim() as any;
+      // Normalize enums to lowercase for select components
+      // This ensures values like "Male", "MALE", "male" all become "male"
+      const normalizeEnum = (val: any): string => {
+        if (val === null || val === undefined || val === '') return '';
+        if (typeof val === 'string') {
+          const normalized = val.toLowerCase().trim();
+          return normalized;
+        }
+        return String(val).toLowerCase().trim();
+      };
+      
+      // Normalize all enum fields to lowercase strings
+      const enumFields: Array<keyof ProfileCreateRequest> = [
+        'gender', 'religion', 'community', 'origin', 'caste', 
+        'accountCreatedBy', 'maritalStatus', 'occupation', 'education',
+        'diet', 'smoking', 'drinking', 'familyType', 'bodyType', 'complexion'
+      ];
+      
+      enumFields.forEach(field => {
+        const value = profileData[field];
+        if (value !== null && value !== undefined && value !== '') {
+          profileData[field] = normalizeEnum(value) as any;
+        } else {
+          // Set to empty string to keep Select controlled
+          profileData[field] = '' as any;
+        }
+      });
+      
+      // Special handling for community/origin backward compatibility
+      if (!profileData.community && profileData.origin) {
+        profileData.community = normalizeEnum(profileData.origin) as any;
       }
       
-      // Community/Origin - use community if available, fallback to origin for backward compatibility
-      if (profileData.community !== null && profileData.community !== undefined) {
-        profileData.community = String(profileData.community).trim() as any;
-      } else if (profileData.origin !== null && profileData.origin !== undefined) {
-        // Backward compatibility: if community not set, use origin
-        profileData.community = String(profileData.origin).trim() as any;
+      // Ensure country defaults to India if not set
+      if (!profileData.country || profileData.country === '') {
+        profileData.country = 'India';
       }
       
-      // Origin - keep for backward compatibility (read-only)
-      if (profileData.origin !== null && profileData.origin !== undefined) {
-        profileData.origin = String(profileData.origin).trim() as any;
-      }
-      
-      // Religion - ensure it's a valid value and is set
-      if (profileData.religion !== null && profileData.religion !== undefined) {
-        profileData.religion = String(profileData.religion).trim() as any;
-      }
-      
-      // Caste - ensure it's a valid enum value
-      if (profileData.caste !== null && profileData.caste !== undefined) {
-        profileData.caste = String(profileData.caste).trim() as any;
-      }
+      // Final debug log
+      console.log('Final mapped profile data:', {
+        gender: profileData.gender,
+        genderType: typeof profileData.gender,
+        religion: profileData.religion,
+        community: profileData.community,
+        origin: profileData.origin,
+        caste: profileData.caste,
+        dateOfBirth: profileData.dateOfBirth,
+        accountCreatedBy: profileData.accountCreatedBy,
+        maritalStatus: profileData.maritalStatus,
+        education: profileData.education,
+        occupation: profileData.occupation,
+      });
       
       setFormData(profileData);
     }
   }, [profile]);
+
+  // Debug: Log when formData.gender changes
+  useEffect(() => {
+    console.log('formData.gender changed:', formData.gender, 'Type:', typeof formData.gender);
+  }, [formData.gender]);
 
   const updateField = (field: keyof ProfileCreateRequest, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -278,6 +334,15 @@ export function ProfileEditPage() {
     if (!formData.height || formData.height < 140 || formData.height > 999) {
       newErrors.height = 'Height must be between 140 and 999 cm';
     }
+    if (!formData.community) {
+      newErrors.community = 'Community is required';
+    }
+    if (!formData.caste) {
+      newErrors.caste = 'Caste is required';
+    }
+    if (!formData.accountCreatedBy) {
+      newErrors.accountCreatedBy = 'Account Created By is required';
+    }
     if (!formData.education) newErrors.education = 'Education is required';
     if (!formData.occupation) newErrors.occupation = 'Occupation is required';
     if (!formData.income || formData.income <= 0) {
@@ -285,6 +350,9 @@ export function ProfileEditPage() {
     }
     if (!formData.city?.trim()) newErrors.city = 'City is required';
     if (!formData.state) newErrors.state = 'State is required';
+    if (!formData.aboutMe?.trim() || formData.aboutMe.trim().length === 0) {
+      newErrors.aboutMe = 'About Me is required';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -405,8 +473,9 @@ export function ProfileEditPage() {
                       Gender <span className="text-error">*</span>
                     </label>
                     <Select
-                      value={formData.gender ? String(formData.gender) : undefined}
+                      value={formData.gender || ''}
                       onValueChange={(val) => updateField('gender', val)}
+                      key={`gender-${formData.gender || 'empty'}`}
                     >
                       <SelectTrigger className={errors.gender ? 'border-error' : ''}>
                         <SelectValue placeholder="Select gender" />
@@ -425,17 +494,14 @@ export function ProfileEditPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Date of Birth <span className="text-error">*</span>
-                    </label>
-                    <Input
-                      type="date"
+                    <DatePicker
+                      label="Date of Birth *"
                       value={formData.dateOfBirth || ''}
-                      onChange={(e) => updateField('dateOfBirth', e.target.value)}
-                      max={getMaxDate()}
-                      min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0]}
+                      onChange={(val) => updateField('dateOfBirth', val)}
+                      maxDate={new Date(getMaxDate())}
+                      minDate={new Date(new Date().setFullYear(new Date().getFullYear() - 100))}
                       error={errors.dateOfBirth}
-                      required
+                      placeholder="Choose your birth date"
                     />
                     {formData.dateOfBirth && !errors.dateOfBirth && calculateAge(formData.dateOfBirth) !== null && (
                       <p className="text-xs text-text-muted mt-1">
@@ -493,18 +559,19 @@ export function ProfileEditPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Community
+                    Community <span className="text-error">*</span>
                   </label>
                   <Select
-                    value={formData.community ? String(formData.community) : (formData.origin ? String(formData.origin) : undefined)}
+                    value={formData.community ? String(formData.community) : (formData.origin ? String(formData.origin) : '')}
                     onValueChange={(val) => {
                       updateField('community', val);
                       // Also update origin for backward compatibility
                       updateField('origin', val);
                     }}
+                    key={`community-${formData.community || formData.origin || 'empty'}`}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select community (optional)" />
+                    <SelectTrigger className={errors.community ? 'border-error' : ''}>
+                      <SelectValue placeholder="Select community" />
                     </SelectTrigger>
                     <SelectContent>
                       {COMMUNITY_OPTIONS.map((opt) => (
@@ -514,18 +581,22 @@ export function ProfileEditPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.community && (
+                    <p className="text-xs text-error mt-1">{errors.community}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Account Created By
+                    Account Created By <span className="text-error">*</span>
                   </label>
                   <Select
                     value={formData.accountCreatedBy || ''}
                     onValueChange={(val) => updateField('accountCreatedBy', val || undefined)}
+                    key={`accountCreatedBy-${formData.accountCreatedBy || 'empty'}`}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select (optional)" />
+                    <SelectTrigger className={errors.accountCreatedBy ? 'border-error' : ''}>
+                      <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
                       {ACCOUNT_CREATED_BY_OPTIONS.map((opt) => (
@@ -535,6 +606,9 @@ export function ProfileEditPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.accountCreatedBy && (
+                    <p className="text-xs text-error mt-1">{errors.accountCreatedBy}</p>
+                  )}
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -545,6 +619,7 @@ export function ProfileEditPage() {
                     <Select
                       value={formData.bodyType || ''}
                       onValueChange={(val) => updateField('bodyType', val)}
+                      key={`bodyType-${formData.bodyType || 'empty'}`}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select body type" />
@@ -566,6 +641,7 @@ export function ProfileEditPage() {
                     <Select
                       value={formData.complexion || ''}
                       onValueChange={(val) => updateField('complexion', val)}
+                      key={`complexion-${formData.complexion || 'empty'}`}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select complexion" />
@@ -589,6 +665,7 @@ export function ProfileEditPage() {
                     <Select
                       value={formData.maritalStatus || 'never_married'}
                       onValueChange={(val) => updateField('maritalStatus', val)}
+                      key={`maritalStatus-${formData.maritalStatus || 'never_married'}`}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select marital status" />
@@ -608,8 +685,9 @@ export function ProfileEditPage() {
                       Religion <span className="text-error">*</span>
                     </label>
                     <Select
-                      value={formData.religion ? String(formData.religion) : undefined}
+                      value={formData.religion ? String(formData.religion) : ''}
                       onValueChange={(val) => updateField('religion', val)}
+                      key={`religion-${formData.religion || 'empty'}`}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select religion" />
@@ -628,14 +706,15 @@ export function ProfileEditPage() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Caste
+                      Caste <span className="text-error">*</span>
                     </label>
                     <Select
                       value={formData.caste || ''}
                       onValueChange={(val) => updateField('caste', val || undefined)}
+                      key={`caste-${formData.caste || 'empty'}`}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select caste (optional)" />
+                      <SelectTrigger className={errors.caste ? 'border-error' : ''}>
+                        <SelectValue placeholder="Select caste" />
                       </SelectTrigger>
                       <SelectContent>
                         {CASTE_OPTIONS.map((opt) => (
@@ -645,7 +724,23 @@ export function ProfileEditPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors.caste && (
+                      <p className="text-xs text-error mt-1">{errors.caste}</p>
+                    )}
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Gotra
+                    </label>
+                    <Input
+                      value={formData.gothra || ''}
+                      onChange={(e) => updateField('gothra', e.target.value.trim())}
+                      placeholder="Enter your Gotra (optional)"
+                    />
+                  </div>
+                </div>
+
+                <div>
                   <Input
                     label="Mother Tongue"
                     value={formData.motherTongue || ''}
@@ -905,8 +1000,8 @@ export function ProfileEditPage() {
                   <h3 className="text-sm font-semibold text-text">Mother's Details</h3>
                   <Input
                     label="Mother's Name"
-                    value={formData.motherName || ''}
-                    onChange={(e) => updateField('motherName', e.target.value)}
+                    value={(formData.motherName as string) || ''}
+                    onChange={(e) => updateField('motherName' as keyof ProfileCreateRequest, e.target.value)}
                     placeholder="Mother's name (optional)"
                   />
                   <Input
@@ -1039,15 +1134,21 @@ export function ProfileEditPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-2">
-                    About Me
+                    About Me <span className="text-error">*</span>
                   </label>
                   <textarea
                     value={formData.aboutMe || ''}
                     onChange={(e) => updateField('aboutMe', e.target.value)}
                     placeholder="Tell us about yourself, your interests, and what you're looking for..."
-                    className="w-full min-h-[120px] px-4 py-2 rounded-lg border border-border bg-surface text-base focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary resize-none"
+                    className={`w-full min-h-[120px] px-4 py-2 rounded-lg border bg-surface text-base focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary resize-none ${
+                      errors.aboutMe ? 'border-error' : 'border-border'
+                    }`}
                     maxLength={500}
+                    required
                   />
+                  {errors.aboutMe && (
+                    <p className="text-xs text-error mt-1">{errors.aboutMe}</p>
+                  )}
                   <p className="text-xs text-text-muted mt-1">
                     {(formData.aboutMe || '').length}/500 characters
                   </p>

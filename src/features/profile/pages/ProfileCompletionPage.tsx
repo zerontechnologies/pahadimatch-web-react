@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -23,7 +24,7 @@ import { updateUser } from '@/store/slices/authSlice';
 import type { ProfileCreateRequest } from '@/types';
 
 const STEPS = [
-  { id: 1, title: 'Basic Info', icon: User, fields: ['firstName', 'lastName', 'gender', 'dateOfBirth', 'height', 'community'] },
+  { id: 1, title: 'Basic Info', icon: User, fields: ['firstName', 'lastName', 'gender', 'dateOfBirth', 'height', 'community', 'caste', 'gothra', 'accountCreatedBy'] },
   { id: 2, title: 'Education & Career', icon: GraduationCap, fields: ['education', 'occupation', 'income', 'company'] },
   { id: 3, title: 'Location', icon: MapPin, fields: ['city', 'state', 'country'] },
   { id: 4, title: 'Family & Lifestyle', icon: Users, fields: ['familyType', 'diet', 'aboutMe'] },
@@ -85,7 +86,7 @@ const EMPLOYMENT_STATUS_OPTIONS = [
   { value: 'not_working', label: 'Not Working' },
 ];
 
-const ORIGIN_OPTIONS = [
+const COMMUNITY_OPTIONS = [
   { value: 'garhwali', label: 'Garhwali' },
   { value: 'kumaoni', label: 'Kumaoni' },
   { value: 'jonsari', label: 'Jonsari' },
@@ -102,20 +103,6 @@ const ACCOUNT_CREATED_BY_OPTIONS = [
   { value: 'self', label: 'Self' },
   { value: 'parent', label: 'Parent' },
   { value: 'sibling', label: 'Sibling' },
-];
-
-const BODY_TYPES = [
-  { value: 'slim', label: 'Slim' },
-  { value: 'average', label: 'Average' },
-  { value: 'athletic', label: 'Athletic' },
-  { value: 'heavy', label: 'Heavy' },
-];
-
-const COMPLEXION_OPTIONS = [
-  { value: 'very_fair', label: 'Very Fair' },
-  { value: 'fair', label: 'Fair' },
-  { value: 'wheatish', label: 'Wheatish' },
-  { value: 'dark', label: 'Dark' },
 ];
 
 const INDIAN_STATES = [
@@ -163,7 +150,7 @@ export function ProfileCompletionPage() {
     country: 'India',
     familyType: undefined,
     diet: undefined,
-    fatherName: '',
+    fatherName: '' as any,
     fatherOccupation: '',
     fatherAlive: undefined,
     fatherEmploymentStatus: undefined,
@@ -293,7 +280,10 @@ export function ProfileCompletionPage() {
         validateAge(formData.dateOfBirth) &&
         formData.height &&
         formData.height >= 140 &&
-        formData.height <= 999
+        formData.height <= 999 &&
+        formData.community &&
+        formData.caste &&
+        formData.accountCreatedBy
       );
     }
     
@@ -314,8 +304,11 @@ export function ProfileCompletionPage() {
     }
     
     if (currentStep === 4) {
-      // Step 4 fields are optional, so always allow proceed
-      return true;
+      // Step 4: aboutMe is required
+      return !!(
+        formData.aboutMe?.trim() &&
+        formData.aboutMe.trim().length > 0
+      );
     }
 
     return step.fields.every((field) => {
@@ -398,6 +391,15 @@ export function ProfileCompletionPage() {
     if (!formData.height || formData.height < 140 || formData.height > 999) {
       newErrors.height = 'Height must be between 140 and 999 cm';
     }
+    if (!formData.community) {
+      newErrors.community = 'Community is required';
+    }
+    if (!formData.caste) {
+      newErrors.caste = 'Caste is required';
+    }
+    if (!formData.accountCreatedBy) {
+      newErrors.accountCreatedBy = 'Account Created By is required';
+    }
     
     // Step 2 validation
     if (!formData.education) {
@@ -416,6 +418,11 @@ export function ProfileCompletionPage() {
     }
     if (!formData.state) {
       newErrors.state = 'State is required';
+    }
+    
+    // Step 4 validation
+    if (!formData.aboutMe?.trim() || formData.aboutMe.trim().length === 0) {
+      newErrors.aboutMe = 'About Me is required';
     }
     
     setErrors(newErrors);
@@ -626,17 +633,15 @@ export function ProfileCompletionPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-2">
-                          Date of Birth <span className="text-error">*</span>
-                        </label>
-                        <Input
-                          type="date"
-                          value={formData.dateOfBirth || ''}
-                          onChange={(e) => updateField('dateOfBirth', e.target.value)}
-                          max={getMaxDate()}
-                          min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0]}
-                          required
-                        />
+                      <DatePicker
+                        label="Date of Birth *"
+                        value={formData.dateOfBirth || ''}
+                        onChange={(val) => updateField('dateOfBirth', val)}
+                        maxDate={new Date(getMaxDate())}
+                        minDate={new Date(new Date().setFullYear(new Date().getFullYear() - 100))}
+                        placeholder="Choose your birth date"
+                        error={errors.dateOfBirth}
+                      />
                         {errors.dateOfBirth && (
                           <p className="text-xs text-error mt-1">{errors.dateOfBirth}</p>
                         )}
@@ -689,7 +694,7 @@ export function ProfileCompletionPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-text-secondary mb-2">
-                        Community
+                        Community <span className="text-error">*</span>
                       </label>
                       <Select
                         value={formData.community || formData.origin || ''}
@@ -698,17 +703,79 @@ export function ProfileCompletionPage() {
                           updateField('origin', val); // Also update origin for backward compatibility
                         }}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select community (optional)" />
+                        <SelectTrigger className={errors.community ? 'border-error' : ''}>
+                          <SelectValue placeholder="Select community" />
                         </SelectTrigger>
                         <SelectContent>
-                          {ORIGIN_OPTIONS.map((o) => (
+                          {COMMUNITY_OPTIONS.map((o) => (
                             <SelectItem key={o.value} value={o.value}>
                               {o.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.community && (
+                        <p className="text-xs text-error mt-1">{errors.community}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        Caste <span className="text-error">*</span>
+                      </label>
+                      <Select
+                        value={formData.caste || ''}
+                        onValueChange={(val) => updateField('caste', val || undefined)}
+                      >
+                        <SelectTrigger className={errors.caste ? 'border-error' : ''}>
+                          <SelectValue placeholder="Select caste" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CASTE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.caste && (
+                        <p className="text-xs text-error mt-1">{errors.caste}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        Gotra
+                      </label>
+                      <Input
+                        value={formData.gothra || ''}
+                        onChange={(e) => updateField('gothra', e.target.value.trim())}
+                        placeholder="Enter your Gotra (optional)"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        Account Created By <span className="text-error">*</span>
+                      </label>
+                      <Select
+                        value={formData.accountCreatedBy || ''}
+                        onValueChange={(val) => updateField('accountCreatedBy', val || undefined)}
+                      >
+                        <SelectTrigger className={errors.accountCreatedBy ? 'border-error' : ''}>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ACCOUNT_CREATED_BY_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.accountCreatedBy && (
+                        <p className="text-xs text-error mt-1">{errors.accountCreatedBy}</p>
+                      )}
                     </div>
                   </>
                 )}
@@ -953,7 +1020,7 @@ export function ProfileCompletionPage() {
                       <Input
                         label="Father's Name"
                         value={formData.fatherName || ''}
-                        onChange={(e) => updateField('fatherName', e.target.value)}
+                        onChange={(e) => updateField('fatherName' as keyof ProfileCreateRequest, e.target.value)}
                         placeholder="Father's name (optional)"
                       />
                       <Input
@@ -1012,7 +1079,7 @@ export function ProfileCompletionPage() {
                       <Input
                         label="Mother's Name"
                         value={formData.motherName || ''}
-                        onChange={(e) => updateField('motherName', e.target.value)}
+                        onChange={(e) => updateField('motherName' as keyof ProfileCreateRequest, e.target.value)}
                         placeholder="Mother's name (optional)"
                       />
                       <Input
@@ -1080,15 +1147,21 @@ export function ProfileCompletionPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-text-secondary mb-2">
-                        About Me
+                        About Me <span className="text-error">*</span>
                       </label>
                       <textarea
                         value={formData.aboutMe || ''}
                         onChange={(e) => updateField('aboutMe', e.target.value)}
                         placeholder="Tell us about yourself, your interests, and what you're looking for..."
-                        className="w-full min-h-[120px] px-4 py-2 rounded-lg border border-border bg-surface text-base focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary resize-none"
+                        className={`w-full min-h-[120px] px-4 py-2 rounded-lg border bg-surface text-base focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary resize-none ${
+                          errors.aboutMe ? 'border-error' : 'border-border'
+                        }`}
                         maxLength={500}
+                        required
                       />
+                      {errors.aboutMe && (
+                        <p className="text-xs text-error mt-1">{errors.aboutMe}</p>
+                      )}
                       <p className="text-xs text-text-muted mt-1">
                         {(formData.aboutMe || '').length}/500 characters
                       </p>

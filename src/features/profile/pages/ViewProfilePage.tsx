@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -23,19 +23,14 @@ import {
   Info,
   Clock,
   X,
-  Briefcase,
   Home,
   Users,
-  Droplet,
-  Scale,
-  Smile,
-  Coffee,
-  Cigarette,
-  Wine
+  Smile
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { VerificationBadge } from '@/components/shared/VerificationBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -78,6 +73,8 @@ export function ViewProfilePage() {
   const profile = profileData?.data;
   const canChat = canChatData?.data?.allowed || false;
   const [localShortlisted, setLocalShortlisted] = useState(false);
+  const [hasSentInterest, setHasSentInterest] = useState(false);
+  const [sentInterestStatus, setSentInterestStatus] = useState<'pending' | 'accepted' | 'declined' | undefined>(undefined);
   const [showKundaliMatch, setShowKundaliMatch] = useState(false);
   const [photoGalleryOpen, setPhotoGalleryOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
@@ -85,11 +82,29 @@ export function ViewProfilePage() {
   const kundaliMatch = kundaliMatchData?.data;
   const contactsRemaining = membershipData?.data?.contactsRemaining || 0;
 
+  useEffect(() => {
+    if (profile) {
+      setLocalShortlisted(!!profile.isShortlisted);
+      setHasSentInterest(!!profile.alreadySentInterest);
+      setSentInterestStatus(profile.sentInterestStatus);
+    }
+  }, [profile]);
+
   const handleSendInterest = async () => {
     if (!profileId) return;
+    if (hasSentInterest && !profile?.isConnected) {
+      dispatch(addToast({
+        type: 'info',
+        title: 'Already sent',
+        message: 'You have already sent a request to this member',
+      }));
+      return;
+    }
     
     try {
       await sendInterest({ profileId }).unwrap();
+      setHasSentInterest(true);
+      setSentInterestStatus('pending');
       dispatch(addToast({
         type: 'success',
         title: 'Interest Sent',
@@ -284,7 +299,7 @@ export function ViewProfilePage() {
                 </p>
                 <div className="bg-champagne rounded-lg p-4 mb-6">
                   <p className="text-sm font-medium text-text">
-                    Profile ID: <span className="font-mono">{profile.profileId}</span>
+                    <span className="font-mono">{profile.profileId}</span>
                   </p>
                 </div>
                 <div className="space-y-3">
@@ -365,14 +380,9 @@ export function ViewProfilePage() {
                   {getInitials(profile.firstName || '', profile.lastName || '')}
                 </AvatarFallback>
               </Avatar>
-              {profile.isVerified && (
-                <div className="flex items-center justify-center mt-2">
-                  <Badge variant="success" className="text-xs">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    Verified
-                  </Badge>
-                </div>
-              )}
+              <div className="flex items-center justify-center mt-2">
+                <VerificationBadge isVerified={profile.isVerified} size="sm" showText />
+              </div>
             </div>
 
             {/* Profile Info */}
@@ -384,7 +394,7 @@ export function ViewProfilePage() {
                     <div className="flex items-center gap-2">
                       <Lock className="w-5 h-5 text-text-muted" />
                       <h2 className="text-2xl sm:text-3xl font-display font-semibold text-text">
-                        Profile ID: {profile.profileId}
+                        {profile.profileId}
                       </h2>
                     </div>
                     {isPremium ? (
@@ -427,9 +437,12 @@ export function ViewProfilePage() {
                     )}
                   </div>
                 ) : (
-                  <h2 className="text-2xl sm:text-3xl font-display font-semibold text-text">
-                    {profile.firstName ? `${profile.firstName} ${profile.lastName}` : profile.lastName}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-2xl sm:text-3xl font-display font-semibold text-text">
+                      {profile.firstName ? `${profile.firstName} ${profile.lastName}` : profile.lastName}
+                    </h2>
+                    <VerificationBadge isVerified={profile.isVerified} size="sm" />
+                  </div>
                 )}
                 <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-text-secondary">
                   {profile.age && <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {profile.age} years</span>}
@@ -449,17 +462,17 @@ export function ViewProfilePage() {
                     <CheckCircle2 className="w-4 h-4 mr-1" />
                     Connected
                   </Badge>
-                ) : profile.alreadySentInterest ? (
+                ) : hasSentInterest ? (
                   <Badge variant={
-                    profile.sentInterestStatus === 'accepted' ? 'success' :
-                    profile.sentInterestStatus === 'declined' ? 'error' : 'outline'
+                    (sentInterestStatus || profile.sentInterestStatus) === 'accepted' ? 'success' :
+                    (sentInterestStatus || profile.sentInterestStatus) === 'declined' ? 'error' : 'outline'
                   } className="px-4 py-2 text-sm">
-                    {profile.sentInterestStatus === 'accepted' ? (
+                    {(sentInterestStatus || profile.sentInterestStatus) === 'accepted' ? (
                       <>
                         <CheckCircle2 className="w-4 h-4 mr-1" />
                         Connected
                       </>
-                    ) : profile.sentInterestStatus === 'declined' ? (
+                    ) : (sentInterestStatus || profile.sentInterestStatus) === 'declined' ? (
                       <>
                         <X className="w-4 h-4 mr-1" />
                         Declined
@@ -467,7 +480,7 @@ export function ViewProfilePage() {
                     ) : (
                       <>
                         <Clock className="w-4 h-4 mr-1" />
-                        Sent
+                        Request Sent
                       </>
                     )}
                   </Badge>
@@ -707,7 +720,7 @@ export function ViewProfilePage() {
                 </div>
                 <div>
                   <label className="text-xs text-text-muted">Country</label>
-                  <p className="text-sm font-medium text-text mt-1">{profile.country || 'Not set'}</p>
+                  <p className="text-sm font-medium text-text mt-1">{profile.country || 'India'}</p>
                 </div>
               </div>
             </CardContent>
@@ -885,14 +898,38 @@ export function ViewProfilePage() {
                   Connect with this profile to view photos
                 </p>
                 {!canChat && (
-                  <Button
-                    size="sm"
-                    onClick={handleSendInterest}
-                    isLoading={isSendingInterest}
-                    leftIcon={<Heart className="w-4 h-4" />}
-                  >
-                    Send Interest to View
-                  </Button>
+                  hasSentInterest ? (
+                    <Badge variant={
+                      (sentInterestStatus || profile.sentInterestStatus) === 'accepted' ? 'success' :
+                      (sentInterestStatus || profile.sentInterestStatus) === 'declined' ? 'error' : 'outline'
+                    } className="px-4 py-2 text-sm">
+                      {(sentInterestStatus || profile.sentInterestStatus) === 'accepted' ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                          Connected
+                        </>
+                      ) : (sentInterestStatus || profile.sentInterestStatus) === 'declined' ? (
+                        <>
+                          <X className="w-4 h-4 mr-1" />
+                          Declined
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-4 h-4 mr-1" />
+                          Request Sent
+                        </>
+                      )}
+                    </Badge>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={handleSendInterest}
+                      isLoading={isSendingInterest}
+                      leftIcon={<Heart className="w-4 h-4" />}
+                    >
+                      Send Interest to View
+                    </Button>
+                  )
                 )}
               </CardContent>
             </Card>

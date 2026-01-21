@@ -17,4 +17,5 @@ export * from './scroll-area';
 export * from './separator';
 export * from './alert-dialog';
 export * from './dropdown-menu';
+export * from './date-picker';
 

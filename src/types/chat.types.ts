@@ -9,6 +9,7 @@ export interface ChatParticipant {
   isOnline?: boolean;
   hasViewedContact?: boolean; // Flag to determine if full name should be shown
   isConnected?: boolean; // Flag to determine if lastName should be shown
+  isVerified?: boolean;
 }
 
 export interface ChatMessage {

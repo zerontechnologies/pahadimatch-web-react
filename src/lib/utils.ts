@@ -56,10 +56,32 @@ export function formatTimeAgo(dateString: string): string {
   return formatDate(dateString);
 }
 
+// Parse date of birth safely (supports YYYY-MM-DD and DD-MM-YYYY)
+export function parseDateOfBirth(dateOfBirth: string): Date | null {
+  if (!dateOfBirth) return null;
+  const isoLike = /^\d{4}-\d{2}-\d{2}$/;
+  const dmyLike = /^\d{2}-\d{2}-\d{4}$/;
+
+  if (isoLike.test(dateOfBirth)) {
+    const [y, m, d] = dateOfBirth.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  if (dmyLike.test(dateOfBirth)) {
+    const [d, m, y] = dateOfBirth.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  const parsed = new Date(dateOfBirth);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
 // Calculate age from date of birth
 export function calculateAge(dateOfBirth: string): number {
+  const birthDate = parseDateOfBirth(dateOfBirth);
+  if (!birthDate) return NaN;
+
   const today = new Date();
-  const birthDate = new Date(dateOfBirth);
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
   

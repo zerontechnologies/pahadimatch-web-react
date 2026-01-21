@@ -16,13 +16,7 @@ import {
   Sparkles,
   Moon,
   Home,
-  Scale,
-  Smile,
-  Coffee,
-  Cigarette,
-  Wine,
-  Briefcase,
-  Droplet
+  Smile
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

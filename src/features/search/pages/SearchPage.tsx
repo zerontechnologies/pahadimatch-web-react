@@ -193,7 +193,7 @@ export function SearchPage() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-6 pb-6">
+                <CardContent className="space-y-6 pb-6 pr-2 max-h-[calc(100vh-8rem)] overflow-y-auto">
                   {/* Age Range */}
                   <div>
                     <label className="text-sm font-medium text-text mb-3 block">

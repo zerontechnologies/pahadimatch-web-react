@@ -1,4 +1,4 @@
-import { useState, memo } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -21,9 +21,11 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, formatHeight, formatTimeAgo, getInitials, capitalize } from '@/lib/utils';
 import { useSendInterestMutation, useShortlistProfileMutation, useRemoveFromShortlistMutation } from '@/store/api/activityApi';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
+import { selectCurrentUser } from '@/store/slices/authSlice';
 import type { SearchResultProfile } from '@/types';
+import { VerificationBadge } from './VerificationBadge';
 
 interface ProfileCardProps {
   profile: SearchResultProfile;
@@ -40,15 +42,40 @@ export const ProfileCard = memo(function ProfileCard({
 }: ProfileCardProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const currentProfileId = useAppSelector(selectCurrentUser)?.profileId;
   const [localShortlisted, setLocalShortlisted] = useState(isShortlisted);
+  const [hasSentInterest, setHasSentInterest] = useState(!!profile.alreadySentInterest);
+  const [interestStatus, setInterestStatus] = useState(profile.sentInterestStatus);
   
   const [sendInterest, { isLoading: isSendingInterest }] = useSendInterestMutation();
   const [shortlistProfile] = useShortlistProfileMutation();
   const [removeFromShortlist] = useRemoveFromShortlistMutation();
 
+  useEffect(() => {
+    setHasSentInterest(!!profile.alreadySentInterest);
+    setInterestStatus(profile.sentInterestStatus);
+  }, [profile.alreadySentInterest, profile.sentInterestStatus, profile.profileId]);
+
   const handleSendInterest = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (profile.profileId === currentProfileId) {
+      dispatch(addToast({
+        type: 'info',
+        title: 'Action not allowed',
+        message: 'You cannot send interest to your own profile',
+      }));
+      return;
+    }
+    if (hasSentInterest && !profile.isConnected) {
+      dispatch(addToast({
+        type: 'info',
+        title: 'Already sent',
+        message: 'You have already sent a request to this member',
+      }));
+      return;
+    }
     
     if (profile.isPremiumRequired) {
       dispatch(addToast({
@@ -62,6 +89,8 @@ export const ProfileCard = memo(function ProfileCard({
     
     try {
       await sendInterest({ profileId: profile.profileId }).unwrap();
+      setHasSentInterest(true);
+      setInterestStatus('pending');
       dispatch(addToast({
         type: 'success',
         title: 'Interest Sent',
@@ -79,6 +108,15 @@ export const ProfileCard = memo(function ProfileCard({
   const handleToggleShortlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (profile.profileId === currentProfileId) {
+      dispatch(addToast({
+        type: 'info',
+        title: 'Action not allowed',
+        message: 'You cannot shortlist your own profile',
+      }));
+      return;
+    }
     
     try {
       if (localShortlisted) {
@@ -137,7 +175,7 @@ export const ProfileCard = memo(function ProfileCard({
                   </Badge>
                 </div>
                 <p className="text-sm text-text-secondary mt-1">
-                  Profile ID: {profile.profileId}
+                  {profile.profileId}
                 </p>
               </div>
             </div>
@@ -177,7 +215,7 @@ export const ProfileCard = memo(function ProfileCard({
         <div className="p-4">
           <div className="text-center">
             <p className="text-sm font-medium text-text-muted mb-2">
-              Profile ID: {profile.profileId}
+              {profile.profileId}
             </p>
             <Button 
               size="sm" 
@@ -229,7 +267,7 @@ export const ProfileCard = memo(function ProfileCard({
                     <div className="flex items-center gap-1">
                       <Lock className="w-3 h-3 text-text-muted" />
                       <h3 className="font-semibold text-text truncate">
-                        Profile ID: {profile.profileId}
+                        {profile.profileId}
                       </h3>
                     </div>
                   ) : (
@@ -237,9 +275,7 @@ export const ProfileCard = memo(function ProfileCard({
                       {profile.lastName}
                     </h3>
                   )}
-                  {profile.isVerified && (
-                    <CheckCircle2 className="w-4 h-4 text-success fill-success/20" />
-                  )}
+                <VerificationBadge isVerified={profile.isVerified} size="sm" />
                 </div>
                 {profile.age && profile.height && (
                   <p className="text-sm text-text-secondary">
@@ -247,9 +283,6 @@ export const ProfileCard = memo(function ProfileCard({
                   </p>
                 )}
               </div>
-              <Badge variant={profile.isVerified ? 'success' : 'outline'} className="flex-shrink-0">
-                {profile.profileId}
-              </Badge>
             </div>
 
             {profile.city && profile.state && (
@@ -279,17 +312,17 @@ export const ProfileCard = memo(function ProfileCard({
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   Connected
                 </Badge>
-              ) : profile.alreadySentInterest ? (
+              ) : hasSentInterest ? (
                 <Badge variant={
-                  profile.sentInterestStatus === 'accepted' ? 'success' :
-                  profile.sentInterestStatus === 'declined' ? 'error' : 'outline'
+                  (interestStatus || profile.sentInterestStatus) === 'accepted' ? 'success' :
+                  (interestStatus || profile.sentInterestStatus) === 'declined' ? 'error' : 'outline'
                 } className="px-3 py-1">
-                  {profile.sentInterestStatus === 'accepted' ? (
+                  {(interestStatus || profile.sentInterestStatus) === 'accepted' ? (
                     <>
                       <CheckCircle2 className="w-3 h-3 mr-1" />
                       Connected
                     </>
-                  ) : profile.sentInterestStatus === 'declined' ? (
+                  ) : (interestStatus || profile.sentInterestStatus) === 'declined' ? (
                     <>
                       <X className="w-3 h-3 mr-1" />
                       Declined
@@ -297,7 +330,7 @@ export const ProfileCard = memo(function ProfileCard({
                   ) : (
                     <>
                       <Clock className="w-3 h-3 mr-1" />
-                      Sent
+                      Request Sent
                     </>
                   )}
                 </Badge>
@@ -374,12 +407,12 @@ export const ProfileCard = memo(function ProfileCard({
 
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex justify-between">
-            {profile.isVerified && (
-              <Badge variant="success" className="backdrop-blur-sm">
-                <CheckCircle2 className="w-3 h-3 mr-1" />
-                Verified
-              </Badge>
-            )}
+            <VerificationBadge
+              isVerified={profile.isVerified}
+              size="sm"
+              showText
+              className="backdrop-blur-sm px-2 py-1 rounded-md bg-white/70"
+            />
             {showMatchScore && profile.matchScore && (
               <Badge variant="premium" className="backdrop-blur-sm">
                 {Math.round(profile.matchScore)}% Match
@@ -406,7 +439,7 @@ export const ProfileCard = memo(function ProfileCard({
 
           {/* Action Buttons - Show on Hover */}
           <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            {!profile.alreadySentInterest ? (
+            {!hasSentInterest ? (
               <Button
                 size="sm"
                 className="flex-1"
@@ -418,11 +451,11 @@ export const ProfileCard = memo(function ProfileCard({
               </Button>
             ) : (
               <Badge 
-                variant={profile.sentInterestStatus === 'accepted' ? 'success' : 'outline'}
+                variant={(interestStatus || profile.sentInterestStatus) === 'accepted' ? 'success' : 'outline'}
                 className="flex-1 justify-center"
               >
-                {profile.sentInterestStatus === 'accepted' ? 'Connected' : 
-                 profile.sentInterestStatus === 'declined' ? 'Declined' : 'Pending'}
+                {(interestStatus || profile.sentInterestStatus) === 'accepted' ? 'Connected' : 
+                 (interestStatus || profile.sentInterestStatus) === 'declined' ? 'Declined' : 'Request Sent'}
               </Badge>
             )}
             <Button
@@ -447,7 +480,7 @@ export const ProfileCard = memo(function ProfileCard({
                   <div className="flex items-center gap-1">
                     <Lock className="w-3 h-3 text-text-muted" />
                     <h3 className="font-semibold text-text-muted group-hover:text-primary transition-colors">
-                      Profile ID: {profile.profileId}
+                      {profile.profileId}
                     </h3>
                   </div>
                   <Badge variant="gold" className="text-xs">

@@ -61,19 +61,30 @@ export function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-cream to-accent-50 opacity-50"></div>
-        <div className="absolute inset-0 pattern-mandala opacity-30"></div>
+      <section className="relative pt-24 pb-20 overflow-hidden min-h-[600px] flex items-center">
+        {/* Ganesha Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/temple.png)',
+            opacity: 0.12,
+            filter: 'blur(0.5px)',
+          }}
+        ></div>
+        {/* Gradient Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-primary-50/60 to-cream/70"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 pattern-mandala opacity-20"></div>
         
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-8">
+          <div className="text-center max-w-4xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-block mb-6"
+              className="inline-block mb-8"
             >
-              <span className="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
+              <span className="bg-white/90 backdrop-blur-sm text-primary px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg border border-primary/20">
                 Trusted by 1000+ Pahadis
               </span>
             </motion.div>
@@ -82,10 +93,12 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold text-text mb-4"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6 leading-tight"
             >
-              Find Your Soulmate from the{' '}
-              <span className="text-primary font-script text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
+              <span className="block text-text mb-2 drop-shadow-sm">
+                Find Your Soulmate from the
+              </span>
+              <span className="block text-primary font-script text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-none drop-shadow-md">
                 Heart of Uttarakhand
               </span>
             </motion.h1>
@@ -94,7 +107,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="max-w-2xl mx-auto text-lg sm:text-xl text-text-secondary mb-8"
+              className="max-w-2xl mx-auto text-lg sm:text-xl text-text-secondary mb-10 leading-relaxed font-medium drop-shadow-sm"
             >
               Connect with like-minded Kumaoni & Garhwali singles who share your values, traditions, and dreams. Experience matchmaking that understands our pahadi culture.
             </motion.p>
