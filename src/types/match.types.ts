@@ -28,6 +28,12 @@ export interface MatchCategoryInfo {
   isPremium?: boolean;
 }
 
+export interface MatchCategoryCount {
+  category: MatchCategory;
+  name: string;
+  count: number;
+}
+
 export const MATCH_CATEGORIES: MatchCategoryInfo[] = [
   { id: 'new_matches', name: 'New Matches', description: 'Profiles joined in last 30 days', icon: 'Sparkles' },
   { id: 'preferred_matches', name: 'Preferred Matches', description: 'Based on your preferences', icon: 'Heart' },

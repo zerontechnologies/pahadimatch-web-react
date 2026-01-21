@@ -67,6 +67,7 @@ export const apiSlice = createApi({
     'Membership',
     'Search',
     'Matches',
+    'MatchCategoryCounts',
     'Interests',
     'Shortlist',
     'Blocked',

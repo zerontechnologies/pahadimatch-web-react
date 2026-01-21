@@ -1,11 +1,17 @@
 import { apiSlice } from './apiSlice';
-import type { ApiResponse, MatchCategory, MatchCategoryInfo, MatchProfile, MatchScoreResponse, Pagination } from '@/types';
+import type { ApiResponse, MatchCategory, MatchCategoryInfo, MatchCategoryCount, MatchProfile, MatchScoreResponse, Pagination } from '@/types';
 
 export const matchApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Get Match Categories
     getMatchCategories: builder.query<ApiResponse<MatchCategoryInfo[]>, void>({
       query: () => '/matches/categories',
+    }),
+    
+    // Get Match Category Counts (all categories with counts in one call)
+    getMatchCategoryCounts: builder.query<ApiResponse<MatchCategoryCount[]>, void>({
+      query: () => '/matches/categories/counts',
+      providesTags: ['MatchCategoryCounts'],
     }),
     
     // Get Matches by Category
@@ -27,6 +33,7 @@ export const matchApi = apiSlice.injectEndpoints({
 
 export const {
   useGetMatchCategoriesQuery,
+  useGetMatchCategoryCountsQuery,
   useGetMatchesByCategoryQuery,
   useLazyGetMatchesByCategoryQuery,
   useGetMatchScoreQuery,

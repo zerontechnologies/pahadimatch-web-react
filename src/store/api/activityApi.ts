@@ -23,7 +23,7 @@ export const activityApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Interests'],
+      invalidatesTags: ['Interests', 'MatchCategoryCounts'],
     }),
     
     // Accept Interest
@@ -32,7 +32,7 @@ export const activityApi = apiSlice.injectEndpoints({
         url: `/activity/interest/${interestId}/accept`,
         method: 'PUT',
       }),
-      invalidatesTags: ['Interests', 'Chats'],
+      invalidatesTags: ['Interests', 'Chats', 'MatchCategoryCounts'],
     }),
     
     // Decline Interest
@@ -41,7 +41,7 @@ export const activityApi = apiSlice.injectEndpoints({
         url: `/activity/interest/${interestId}/decline`,
         method: 'PUT',
       }),
-      invalidatesTags: ['Interests'],
+      invalidatesTags: ['Interests', 'MatchCategoryCounts'],
     }),
     
     // Get Received Interests
@@ -77,7 +77,7 @@ export const activityApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Shortlist'],
+      invalidatesTags: ['Shortlist', 'MatchCategoryCounts'],
     }),
     
     // Remove from Shortlist
@@ -86,7 +86,7 @@ export const activityApi = apiSlice.injectEndpoints({
         url: `/activity/shortlist/${profileId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Shortlist'],
+      invalidatesTags: ['Shortlist', 'MatchCategoryCounts'],
     }),
     
     // Get Shortlisted Profiles
