@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Grid, List, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, Grid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfileCard } from '@/components/shared/ProfileCard';
 import { ProfileCardSkeleton } from '@/components/ui/skeleton';

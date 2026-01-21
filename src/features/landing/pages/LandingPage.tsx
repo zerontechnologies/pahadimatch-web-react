@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -11,8 +11,6 @@ import {
   UserPlus,
   Search,
   MessageCircle,
-  Download,
-  Smartphone,
   Mail,
   Phone,
   Navigation,
@@ -23,13 +21,15 @@ import {
 import { motion } from 'framer-motion';
 
 export function LandingPage() {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/home" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                 <Heart className="w-6 h-6 text-white" />
               </div>
@@ -37,7 +37,6 @@ export function LandingPage() {
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="/home" className="text-text hover:text-primary transition-colors">Home</a>
               <a href="#how-it-works" className="text-text hover:text-primary transition-colors">How It Works</a>
               <a href="#success-stories" className="text-text hover:text-primary transition-colors">Success Stories</a>
               <a href="#about" className="text-text hover:text-primary transition-colors">About</a>
@@ -47,13 +46,21 @@ export function LandingPage() {
               <button className="p-2 text-text hover:text-primary transition-colors">
                 <span className="text-sm">हिं</span>
               </button>
-              <Button variant="outline" size="sm" className="hidden sm:flex">
-                <Download className="w-4 h-4" />
-                Play Store
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate('/login')}
+                className="hidden sm:flex"
+              >
+                Login
               </Button>
-              <Button variant="default" size="sm" className="hidden sm:flex">
-                <Smartphone className="w-4 h-4" />
-                App Store
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={() => navigate('/signup')}
+                className="hidden sm:flex"
+              >
+                Sign Up
               </Button>
             </div>
           </div>
@@ -66,14 +73,12 @@ export function LandingPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: 'url(/temple.png)',
-            opacity: 0.12,
-            filter: 'blur(0.5px)',
+            backgroundImage: 'url(/temple.png)'
           }}
         ></div>
         {/* Gradient Overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-primary-50/60 to-cream/70"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-primary-50/60 to-cream/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-t via-transparent to-transparent"></div>
         <div className="absolute inset-0 pattern-mandala opacity-20"></div>
         
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -118,13 +123,20 @@ export function LandingPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
-              <Button size="lg" className="w-full sm:w-auto">
-                <Download className="w-5 h-5" />
-                Download on Play Store
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/signup')}
+              >
+                Get Started
               </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white">
-                <Smartphone className="w-5 h-5" />
-                Download on App Store
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full sm:w-auto bg-white"
+                onClick={() => navigate('/login')}
+              >
+                Login
               </Button>
             </motion.div>
           </div>
@@ -372,8 +384,16 @@ export function LandingPage() {
 
       {/* Final CTA Section */}
       <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-cream to-accent-50"></div>
-        <div className="absolute inset-0 pattern-paisley opacity-20"></div>
+      <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/ganesha.jpg)'
+          }}
+        ></div>
+        {/* Gradient Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-primary-50/60 to-cream/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-t via-transparent to-transparent"></div>
+        <div className="absolute inset-0 pattern-mandala opacity-20"></div>
         
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
@@ -402,13 +422,20 @@ export function LandingPage() {
               transition={{ delay: 0.2 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8"
             >
-              <Button size="lg" className="w-full sm:w-auto">
-                <Download className="w-5 h-5" />
-                Download on Play Store
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/signup')}
+              >
+                Get Started
               </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white">
-                <Smartphone className="w-5 h-5" />
-                Download on App Store
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full sm:w-auto bg-white"
+                onClick={() => navigate('/login')}
+              >
+                Login
               </Button>
             </motion.div>
 

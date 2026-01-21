@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Shield, Users, Heart } from 'lucide-react';
+import { ArrowRight, Shield, Heart } from 'lucide-react';
 import { AuthLayout } from '../components/AuthLayout';
 import { PhoneInput } from '../components/PhoneInput';
 import { Button } from '@/components/ui/button';

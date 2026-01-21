@@ -13,8 +13,8 @@ export function ProtectedRoute({ children, requireProfileComplete = false }: Pro
   const user = useAppSelector(selectCurrentUser);
 
   if (!isAuthenticated) {
-    // Redirect to login, but save the attempted URL
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Redirect to home page if not authenticated
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // Check if profile completion is required
@@ -25,12 +25,33 @@ export function ProtectedRoute({ children, requireProfileComplete = false }: Pro
   return <>{children}</>;
 }
 
-export function PublicRoute({ children }: { children: React.ReactNode }) {
+interface PublicRouteProps {
+  children: React.ReactNode;
+  allowAuthenticated?: boolean; // Allow authenticated users to see the page (e.g., landing page)
+  redirectIfAuthenticated?: boolean; // Redirect authenticated users away (e.g., login/signup)
+}
+
+export function PublicRoute({ 
+  children, 
+  allowAuthenticated = false,
+  redirectIfAuthenticated = false 
+}: PublicRouteProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectCurrentUser);
 
   if (isAuthenticated) {
-    // Redirect authenticated users to dashboard or profile completion
+    // If redirectIfAuthenticated is true, redirect to dashboard
+    if (redirectIfAuthenticated) {
+      if (user && !user.isProfileComplete) {
+        return <Navigate to="/complete-profile" replace />;
+      }
+      return <Navigate to="/dashboard" replace />;
+    }
+    // If allowAuthenticated is true, let them see the page
+    if (allowAuthenticated) {
+      return <>{children}</>;
+    }
+    // Default: redirect authenticated users to dashboard
     if (user && !user.isProfileComplete) {
       return <Navigate to="/complete-profile" replace />;
     }

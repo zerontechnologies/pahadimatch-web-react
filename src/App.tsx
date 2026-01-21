@@ -50,8 +50,8 @@ function NotFoundPage() {
       <div className="text-center">
         <h1 className="text-6xl font-display font-bold text-primary mb-4">404</h1>
         <p className="text-xl text-text-secondary mb-8">Page not found</p>
-        <a href="/dashboard" className="text-primary hover:underline">
-          Go to Dashboard
+        <a href="/" className="text-primary hover:underline">
+          Go to Home
         </a>
       </div>
     </div>
@@ -66,9 +66,9 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route
-              path="/home"
+              path="/"
               element={
-                <PublicRoute>
+                <PublicRoute allowAuthenticated>
                   <Suspense fallback={<PageLoader />}>
                     <LandingPage />
                   </Suspense>
@@ -78,7 +78,7 @@ function App() {
             <Route
               path="/login"
               element={
-                <PublicRoute>
+                <PublicRoute redirectIfAuthenticated>
                   <Suspense fallback={<PageLoader />}>
                     <LoginPage />
                   </Suspense>
@@ -88,7 +88,7 @@ function App() {
             <Route
               path="/signup"
               element={
-                <PublicRoute>
+                <PublicRoute redirectIfAuthenticated>
                   <Suspense fallback={<PageLoader />}>
                     <SignupPage />
                   </Suspense>
@@ -118,49 +118,131 @@ function App() {
 
             {/* Protected Routes with Dashboard Layout */}
             <Route
-              path="/"
+              path="/dashboard"
               element={
                 <ProtectedRoute requireProfileComplete>
                   <DashboardLayout />
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
-              <Route path="search" element={<Suspense fallback={<PageLoader />}><SearchPage /></Suspense>} />
-              
-              {/* Matches */}
-              <Route path="matches" element={<Suspense fallback={<PageLoader />}><MatchesPage /></Suspense>} />
-              <Route path="matches/:categoryId" element={<Suspense fallback={<PageLoader />}><MatchCategoryPage /></Suspense>} />
-              
-              {/* Activity */}
-              <Route path="activity" element={<Suspense fallback={<PageLoader />}><ActivityPage /></Suspense>} />
-              
-              {/* Chat */}
-              <Route path="chat" element={<Suspense fallback={<PageLoader />}><ChatPage /></Suspense>} />
-              <Route path="chat/:profileId" element={<Suspense fallback={<PageLoader />}><ChatPage /></Suspense>} />
-              
-              {/* Profile */}
-              <Route path="profile" element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
-              <Route path="profile/edit" element={<Suspense fallback={<PageLoader />}><ProfileEditPage /></Suspense>} />
-              <Route path="profile/:profileId" element={<Suspense fallback={<PageLoader />}><ViewProfilePage /></Suspense>} />
-              
-              {/* Photos */}
-              <Route path="photos" element={<Suspense fallback={<PageLoader />}><PhotosPage /></Suspense>} />
-              
-              {/* Kundali */}
-              <Route path="kundali" element={<Suspense fallback={<PageLoader />}><KundaliPage /></Suspense>} />
-              <Route path="kundali/create" element={<Suspense fallback={<PageLoader />}><KundaliPage /></Suspense>} />
-              <Route path="kundali/edit" element={<Suspense fallback={<PageLoader />}><KundaliPage /></Suspense>} />
-              
-              {/* Membership */}
-              <Route path="membership" element={<Suspense fallback={<PageLoader />}><MembershipPage /></Suspense>} />
-              
-              {/* Notifications */}
-              <Route path="notifications" element={<Suspense fallback={<PageLoader />}><NotificationsPage /></Suspense>} />
-              
-              {/* Settings */}
-              <Route path="settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
+              <Route index element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
+            </Route>
+            
+            {/* Other protected routes */}
+            <Route
+              path="/search"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><SearchPage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/matches"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><MatchesPage /></Suspense>} />
+              <Route path=":categoryId" element={<Suspense fallback={<PageLoader />}><MatchCategoryPage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/activity"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><ActivityPage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><ChatPage /></Suspense>} />
+              <Route path=":profileId" element={<Suspense fallback={<PageLoader />}><ChatPage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
+              <Route path="edit" element={<Suspense fallback={<PageLoader />}><ProfileEditPage /></Suspense>} />
+              <Route path=":profileId" element={<Suspense fallback={<PageLoader />}><ViewProfilePage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/photos"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><PhotosPage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/kundali"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><KundaliPage /></Suspense>} />
+              <Route path="create" element={<Suspense fallback={<PageLoader />}><KundaliPage /></Suspense>} />
+              <Route path="edit" element={<Suspense fallback={<PageLoader />}><KundaliPage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/membership"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><MembershipPage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><NotificationsPage /></Suspense>} />
+            </Route>
+            
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute requireProfileComplete>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
             </Route>
 
             {/* 404 */}
