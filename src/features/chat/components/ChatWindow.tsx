@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Send, MoreVertical, Info, Smile, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ interface ChatWindowProps {
 
 export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const user = useAppSelector(selectCurrentUser);
   const [message, setMessage] = useState('');
   const [showPredefinedMessages, setShowPredefinedMessages] = useState(false);
@@ -257,7 +259,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/profile/${chat.participant.profileId}`)}>
                 <Info className="w-4 h-4 mr-2" />
                 View Profile
               </DropdownMenuItem>

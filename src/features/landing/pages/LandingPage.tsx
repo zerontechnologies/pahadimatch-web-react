@@ -503,7 +503,12 @@ export function LandingPage() {
               </ul>
               <div className="mt-4 text-sm text-white/60">
                 Powered by{' '}
-                <a href="#" className="hover:text-white transition-colors underline">
+                <a 
+                  href="https://zerontech.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors underline"
+                >
                   Zeron Technologies
                   <Globe className="w-3 h-3 inline ml-1" />
                 </a>
