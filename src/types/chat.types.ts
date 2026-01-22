@@ -86,6 +86,7 @@ export interface SocketMessagesDelivered {
 
 export interface SocketMessageDeleted {
   messageId: string;
+  chatId: string;
   deletedBy: string;
 }
 

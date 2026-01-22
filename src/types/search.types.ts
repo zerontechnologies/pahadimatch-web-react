@@ -62,6 +62,7 @@ export interface SearchResultProfile {
   receivedInterestStatus?: 'pending' | 'accepted' | 'declined';
   isConnected?: boolean;
   hasViewedContact?: boolean;
+  isShortlisted?: boolean;
 }
 
 export interface SaveSearchPreferencesRequest extends SearchFilters {}

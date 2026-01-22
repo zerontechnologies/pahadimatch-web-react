@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, formatHeight, formatTimeAgo, getInitials, capitalize } from '@/lib/utils';
 import { useSendInterestMutation, useShortlistProfileMutation, useRemoveFromShortlistMutation } from '@/store/api/activityApi';
+import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
 import { selectCurrentUser } from '@/store/slices/authSlice';
@@ -43,13 +44,24 @@ export const ProfileCard = memo(function ProfileCard({
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const currentProfileId = useAppSelector(selectCurrentUser)?.profileId;
-  const [localShortlisted, setLocalShortlisted] = useState(isShortlisted);
+  const { data: membership } = useGetMembershipSummaryQuery();
+  const isPremium = membership?.data?.isPremium || false;
+  
+  // Check if profile is shortlisted (from prop or profile data)
+  const [localShortlisted, setLocalShortlisted] = useState(isShortlisted || profile.isShortlisted || false);
   const [hasSentInterest, setHasSentInterest] = useState(!!profile.alreadySentInterest);
   const [interestStatus, setInterestStatus] = useState(profile.sentInterestStatus);
   
   const [sendInterest, { isLoading: isSendingInterest }] = useSendInterestMutation();
   const [shortlistProfile] = useShortlistProfileMutation();
   const [removeFromShortlist] = useRemoveFromShortlistMutation();
+  
+  // Update shortlisted state when profile data changes
+  useEffect(() => {
+    if (profile.isShortlisted !== undefined) {
+      setLocalShortlisted(profile.isShortlisted);
+    }
+  }, [profile.isShortlisted]);
 
   useEffect(() => {
     setHasSentInterest(!!profile.alreadySentInterest);
@@ -262,7 +274,7 @@ export const ProfileCard = memo(function ProfileCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {profile.requiresPremiumForName || !profile.lastName ? (
                     <div className="flex items-center gap-1">
                       <Lock className="w-3 h-3 text-text-muted" />
@@ -275,7 +287,13 @@ export const ProfileCard = memo(function ProfileCard({
                       {profile.lastName}
                     </h3>
                   )}
-                <VerificationBadge isVerified={profile.isVerified} size="sm" />
+                  <VerificationBadge isVerified={profile.isVerified} size="sm" />
+                  {localShortlisted && (
+                    <Badge variant="accent" className="text-xs">
+                      <BookmarkCheck className="w-3 h-3 mr-1" />
+                      Shortlisted
+                    </Badge>
+                  )}
                 </div>
                 {profile.age && profile.height && (
                   <p className="text-sm text-text-secondary">
@@ -406,13 +424,21 @@ export const ProfileCard = memo(function ProfileCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
           {/* Top Badges */}
-          <div className="absolute top-3 left-3 right-3 flex justify-between">
-            <VerificationBadge
-              isVerified={profile.isVerified}
-              size="sm"
-              showText
-              className="backdrop-blur-sm px-2 py-1 rounded-md bg-white/70"
-            />
+          <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+            <div className="flex items-center gap-2">
+              <VerificationBadge
+                isVerified={profile.isVerified}
+                size="sm"
+                showText
+                className="backdrop-blur-sm px-2 py-1 rounded-md bg-white/70"
+              />
+              {localShortlisted && (
+                <Badge variant="accent" className="backdrop-blur-sm bg-accent/90 text-white">
+                  <BookmarkCheck className="w-3 h-3 mr-1" />
+                  Shortlisted
+                </Badge>
+              )}
+            </div>
             {showMatchScore && profile.matchScore && (
               <Badge variant="premium" className="backdrop-blur-sm">
                 {Math.round(profile.matchScore)}% Match
@@ -424,7 +450,7 @@ export const ProfileCard = memo(function ProfileCard({
           <button
             onClick={handleToggleShortlist}
             className={cn(
-              'absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-200',
+              'absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-200 z-10',
               localShortlisted
                 ? 'bg-accent text-white'
                 : 'bg-white/80 text-text-muted hover:bg-white hover:text-accent'
@@ -476,17 +502,11 @@ export const ProfileCard = memo(function ProfileCard({
           <div className="flex items-start justify-between mb-2">
             <div>
               {profile.requiresPremiumForName || !profile.firstName ? (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-text-muted" />
-                    <h3 className="font-semibold text-text-muted group-hover:text-primary transition-colors">
-                      {profile.profileId}
-                    </h3>
-                  </div>
-                  <Badge variant="gold" className="text-xs">
-                    <Crown className="w-3 h-3 mr-1" />
-                    Premium
-                  </Badge>
+                <div className="flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-text-muted" />
+                  <h3 className="font-semibold text-text-muted group-hover:text-primary transition-colors">
+                    {profile.profileId}
+                  </h3>
                 </div>
               ) : (
                 <h3 className="font-semibold text-text group-hover:text-primary transition-colors">
@@ -516,16 +536,13 @@ export const ProfileCard = memo(function ProfileCard({
             )}
           </div>
 
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-            {profile.lastActive && (
+          {isPremium && profile.lastActive && (
+            <div className="mt-3 pt-3 border-t border-border">
               <span className="text-xs text-text-muted">
                 Active {formatTimeAgo(profile.lastActive)}
               </span>
-            )}
-            <Badge variant="outline" className="text-xs">
-              {profile.profileId}
-            </Badge>
-          </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </Link>

@@ -113,10 +113,11 @@ export function formatPhone(phone: string): string {
 }
 
 // Get initials from name
-export function getInitials(firstName: string, lastName?: string): string {
-  const first = firstName.charAt(0).toUpperCase();
-  const last = lastName ? lastName.charAt(0).toUpperCase() : '';
-  return first + last;
+export function getInitials(firstName?: string | null, lastName?: string | null): string {
+  if (!firstName && !lastName) return '?';
+  const first = firstName && firstName.length > 0 ? firstName.charAt(0).toUpperCase() : '';
+  const last = lastName && lastName.length > 0 ? lastName.charAt(0).toUpperCase() : '';
+  return first + last || '?';
 }
 
 // Validate phone number (Indian format)

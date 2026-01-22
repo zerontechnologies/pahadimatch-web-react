@@ -16,11 +16,14 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ProfileCard } from '@/components/shared/ProfileCard';
 import { ProfileCardSkeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router-dom';
 import { useGetOwnProfileQuery, useGetProfileViewsQuery } from '@/store/api/profileApi';
 import { useGetMatchesByCategoryQuery } from '@/store/api/matchApi';
 import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
-import { useGetReceivedInterestsQuery } from '@/store/api/activityApi';
+import { useGetReceivedInterestsQuery, useGetSentInterestsQuery, useAcceptInterestMutation, useDeclineInterestMutation } from '@/store/api/activityApi';
 import { useGetChatListQuery, useGetUnreadCountQuery } from '@/store/api/chatApi';
+import { useAppDispatch } from '@/store/hooks';
+import { addToast } from '@/store/slices/uiSlice';
 import { formatDate } from '@/lib/utils';
 
 const containerVariants = {
@@ -39,6 +42,8 @@ const itemVariants = {
 };
 
 export function DashboardPage() {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { data: profile } = useGetOwnProfileQuery();
   const { data: membership } = useGetMembershipSummaryQuery();
   const { data: newMatches, isLoading: matchesLoading } = useGetMatchesByCategoryQuery({
@@ -46,47 +51,103 @@ export function DashboardPage() {
     limit: 4
   });
   const { data: interests } = useGetReceivedInterestsQuery({ status: 'pending', limit: 5 });
+  const { data: sentInterests } = useGetSentInterestsQuery({ limit: 1 });
   const { data: profileViews } = useGetProfileViewsQuery({ page: 1, limit: 1 });
   const { data: chats } = useGetChatListQuery();
   const { data: unreadCount } = useGetUnreadCountQuery(undefined, { pollingInterval: 30000 });
+  
+  const [acceptInterest, { isLoading: isAccepting }] = useAcceptInterestMutation();
+  const [declineInterest, { isLoading: isDeclining }] = useDeclineInterestMutation();
 
   const profileData = profile?.data;
   const membershipData = membership?.data;
+  const isPremium = membershipData?.isPremium || false;
   const matchesData = newMatches?.data || [];
   const pendingInterests = interests?.data || [];
+  const sentInterestsCount = sentInterests?.pagination?.total || 0;
   const totalProfileViews = profileViews?.pagination?.total || 0;
   const totalChats = chats?.data?.length || 0;
   const unreadMessages = unreadCount?.data?.unreadCount || 0;
 
+  const handleAcceptInterest = async (e: React.MouseEvent, interestId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await acceptInterest(interestId).unwrap();
+      dispatch(addToast({
+        type: 'success',
+        title: 'Interest Accepted',
+        message: 'You can now chat with this person!',
+      }));
+    } catch (err: any) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Failed',
+        message: err?.data?.message || 'Could not accept interest',
+      }));
+    }
+  };
+
+  const handleDeclineInterest = async (e: React.MouseEvent, interestId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await declineInterest(interestId).unwrap();
+      dispatch(addToast({
+        type: 'info',
+        title: 'Interest Declined',
+      }));
+    } catch (err: any) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Failed',
+        message: err?.data?.message || 'Could not decline interest',
+      }));
+    }
+  };
+
   // Quick Stats
   const stats = [
-    { 
+    // Profile Views - only show if premium, otherwise show warning
+    isPremium ? {
       label: 'Profile Views', 
       value: totalProfileViews.toString(), 
       icon: Eye, 
       color: 'text-primary',
-      bgColor: 'bg-primary-50'
+      bgColor: 'bg-primary-50',
+      isWarning: false
+    } : {
+      label: 'Profile Views', 
+      value: 'Premium', 
+      icon: Crown, 
+      color: 'text-accent',
+      bgColor: 'bg-accent-50',
+      isWarning: true,
+      warningMessage: 'Upgrade to see who viewed your profile'
     },
     { 
       label: 'Interests Received', 
       value: pendingInterests.length.toString(), 
       icon: Heart, 
       color: 'text-error',
-      bgColor: 'bg-error/10'
+      bgColor: 'bg-error/10',
+      isWarning: false
     },
     { 
-      label: 'Matches', 
-      value: newMatches?.pagination?.total ? (newMatches.pagination.total > 50 ? '50+' : newMatches.pagination.total.toString()) : '0', 
-      icon: Users, 
+      label: 'Interest Sent', 
+      value: sentInterestsCount.toString(), 
+      icon: Heart, 
       color: 'text-success',
-      bgColor: 'bg-success/10'
+      bgColor: 'bg-success/10',
+      isWarning: false
     },
     { 
       label: 'Messages', 
       value: unreadMessages > 0 ? `${unreadMessages}` : totalChats.toString(), 
       icon: MessageSquare, 
       color: 'text-accent',
-      bgColor: 'bg-accent-50'
+      bgColor: 'bg-accent-50',
+      isWarning: false
     },
   ];
 
@@ -122,15 +183,29 @@ export function DashboardPage() {
       {/* Stats Grid */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="hover:shadow-md transition-shadow">
+          <Card 
+            key={stat.label} 
+            className={`hover:shadow-md transition-shadow ${stat.isWarning ? 'border-accent/50' : ''}`}
+            onClick={stat.isWarning ? () => navigate('/membership') : undefined}
+            style={stat.isWarning ? { cursor: 'pointer' } : {}}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-text">{stat.value}</p>
-                  <p className="text-sm text-text-muted">{stat.label}</p>
+                <div className="flex-1 min-w-0">
+                  {stat.isWarning ? (
+                    <>
+                      <p className="text-lg font-bold text-text mb-1">{stat.value}</p>
+                      <p className="text-xs text-text-secondary leading-tight">{stat.warningMessage}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-2xl font-bold text-text">{stat.value}</p>
+                      <p className="text-sm text-text-muted">{stat.label}</p>
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -230,7 +305,7 @@ export function DashboardPage() {
                 New Matches
               </CardTitle>
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/matches/new" className="flex items-center gap-1">
+                <Link to="/matches/new_matches" className="flex items-center gap-1">
                   View All <ChevronRight className="w-4 h-4" />
                 </Link>
               </Button>
@@ -253,7 +328,7 @@ export function DashboardPage() {
               <div className="text-center py-8">
                 <p className="text-text-secondary">No new matches yet. Update your preferences!</p>
                 <Button variant="outline" className="mt-4" asChild>
-                  <Link to="/profile/preferences">Update Preferences</Link>
+                  <Link to="/profile/edit">Update Preferences</Link>
                 </Button>
               </div>
             )}
@@ -283,26 +358,45 @@ export function DashboardPage() {
                 {pendingInterests.slice(0, 3).map((interest: any) => (
                   <div 
                     key={interest.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-champagne/50 hover:bg-champagne transition-colors"
+                    className="flex items-center justify-between p-3 rounded-xl bg-champagne/50 hover:bg-champagne transition-colors cursor-pointer"
+                    onClick={() => navigate(`/profile/${interest.profile?.profileId || interest.profileId}`)}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
                         <span className="font-medium text-primary">
-                          {interest.profile.lastName?.[0] || '?'}
+                          {(interest.profile?.lastName || interest.profile?.profileId || '?')?.[0]?.toUpperCase() || '?'}
                         </span>
                       </div>
-                      <div>
-                        <p className="font-medium text-text">
-                          {interest.profile.lastName}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-text truncate">
+                          {interest.profile?.lastName || interest.profile?.profileId || 'Unknown'}
                         </p>
-                        <p className="text-sm text-text-muted">
-                          {interest.profile.age} yrs • {interest.profile.city}
+                        <p className="text-sm text-text-muted truncate">
+                          {interest.profile?.age && `${interest.profile.age} yrs`}
+                          {interest.profile?.age && interest.profile?.city && ' • '}
+                          {interest.profile?.city || ''}
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">View</Button>
-                      <Button size="sm">Accept</Button>
+                    <div className="flex gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/profile/${interest.profile?.profileId || interest.profileId}`);
+                        }}
+                      >
+                        View
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={(e) => handleAcceptInterest(e, interest.id)}
+                        isLoading={isAccepting}
+                        disabled={isAccepting || isDeclining}
+                      >
+                        Accept
+                      </Button>
                     </div>
                   </div>
                 ))}

@@ -8,6 +8,7 @@ import {
   Users, 
   Save, 
   X,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -143,8 +144,10 @@ export function ProfileEditPage() {
 
   const [formData, setFormData] = useState<ProfileCreateRequest>({
     country: 'India',
+    hobbies: [],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [newHobby, setNewHobby] = useState('');
 
   // Load profile data into form
   useEffect(() => {
@@ -248,6 +251,11 @@ export function ProfileEditPage() {
       // Ensure country defaults to India if not set
       if (!profileData.country || profileData.country === '') {
         profileData.country = 'India';
+      }
+      
+      // Ensure hobbies is an array
+      if (!Array.isArray(profileData.hobbies)) {
+        profileData.hobbies = profileData.hobbies ? [profileData.hobbies].filter(Boolean).flat() : [];
       }
       
       // Final debug log
@@ -1129,6 +1137,80 @@ export function ProfileEditPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                {/* Hobbies Section */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-2">
+                    <Sparkles className="w-4 h-4" />
+                    Hobbies & Interests (Optional)
+                  </label>
+                  <div className="space-y-3">
+                    {/* Input for adding new hobby */}
+                    <div className="flex gap-2">
+                      <Input
+                        value={newHobby}
+                        onChange={(e) => setNewHobby(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newHobby.trim()) {
+                            e.preventDefault();
+                            const hobbies = formData.hobbies || [];
+                            if (!hobbies.includes(newHobby.trim())) {
+                              updateField('hobbies', [...hobbies, newHobby.trim()]);
+                              setNewHobby('');
+                            }
+                          }
+                        }}
+                        placeholder="Type a hobby and press Enter"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          if (newHobby.trim()) {
+                            const hobbies = formData.hobbies || [];
+                            if (!hobbies.includes(newHobby.trim())) {
+                              updateField('hobbies', [...hobbies, newHobby.trim()]);
+                              setNewHobby('');
+                            }
+                          }
+                        }}
+                        disabled={!newHobby.trim()}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    
+                    {/* Display hobbies as badges */}
+                    {formData.hobbies && formData.hobbies.length > 0 && (
+                      <div className="flex flex-wrap gap-2 p-3 border border-border rounded-lg bg-champagne/20">
+                        {formData.hobbies.map((hobby, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-surface border border-border rounded-full text-sm"
+                          >
+                            <span>{hobby}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const hobbies = formData.hobbies || [];
+                                updateField('hobbies', hobbies.filter((_, i) => i !== index));
+                              }}
+                              className="ml-1 hover:text-error transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(!formData.hobbies || formData.hobbies.length === 0) && (
+                      <p className="text-xs text-text-muted">
+                        Add your hobbies and interests to help others know more about you
+                      </p>
+                    )}
                   </div>
                 </div>
 

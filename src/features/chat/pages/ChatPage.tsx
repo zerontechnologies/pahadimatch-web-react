@@ -22,6 +22,9 @@ export function ChatPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showConnections, setShowConnections] = useState(false);
   
+  // WebSocket is initialized in DashboardLayout, but we can use it here if needed
+  // useWebSocket();
+  
   // Handle profileId from URL
   useEffect(() => {
     if (profileIdFromUrl) {
@@ -32,9 +35,8 @@ export function ChatPage() {
     }
   }, [profileIdFromUrl, setSearchParams]);
   
+  // Remove polling - WebSocket will handle real-time updates
   const { data, isLoading } = useGetChatListQuery(undefined, {
-    // Poll every 30 seconds for new messages, but only if tab is visible
-    pollingInterval: 30000,
     refetchOnMountOrArgChange: true,
   });
   const { data: connectionsData, isLoading: connectionsLoading } = useGetConnectionsQuery({ page: 1, limit: 50 });

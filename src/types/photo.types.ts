@@ -6,7 +6,7 @@ export interface Photo {
   isProfilePhoto: boolean;
   isPrivate: boolean;
   order: number;
-  isApproved: boolean;
+  isApproved: boolean; // Admin verification/approval status
   createdAt: string;
 }
 
@@ -16,7 +16,7 @@ export interface PhotoUploadResponse {
   isProfilePhoto: boolean;
   isPrivate: boolean;
   order: number;
-  isApproved: boolean;
+  isApproved: boolean; // Admin verification/approval status
   createdAt: string;
 }
 

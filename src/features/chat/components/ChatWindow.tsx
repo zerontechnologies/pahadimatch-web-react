@@ -19,6 +19,9 @@ import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectCurrentUser } from '@/store/slices/authSlice';
 import { addToast } from '@/store/slices/uiSlice';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { webSocketService } from '@/lib/websocket';
 import type { Chat, MessageType } from '@/types';
 
 interface ChatWindowProps {
@@ -38,6 +41,12 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   // Check if this is a connection chat (no real chat ID yet)
   const isConnectionChat = chat.id.startsWith('connection-');
   const realChatId = isConnectionChat ? null : chat.id;
+  
+  // WebSocket connection for real-time updates
+  const { joinChat, leaveChat, sendTyping } = useWebSocket();
+  
+  // Typing indicator for other user
+  const isOtherUserTyping = useTypingIndicator(realChatId);
   
   const { data, refetch } = useGetChatMessagesQuery(
     { chatId: realChatId || '', limit: 50 },
@@ -109,6 +118,16 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
     }
   }, [memoizedMessages]);
 
+  // Join/leave chat room for real-time updates
+  useEffect(() => {
+    if (!isConnectionChat && realChatId) {
+      joinChat(realChatId);
+      return () => {
+        leaveChat(realChatId);
+      };
+    }
+  }, [realChatId, isConnectionChat, joinChat, leaveChat]);
+
   // Mark as read when chat opens (only for real chats)
   useEffect(() => {
     if (!isConnectionChat && chat.unreadCount > 0 && realChatId) {
@@ -148,13 +167,21 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
     }
 
     try {
-      await sendMessage({
+      if (import.meta.env.DEV) {
+        console.log('📤 Sending message:', { profileId: chat.participant.profileId, content: messageToSend, messageType });
+      }
+      
+      const result = await sendMessage({
         profileId: chat.participant.profileId,
         data: { 
           content: messageToSend,
           messageType: messageType
         }
       }).unwrap();
+      
+      if (import.meta.env.DEV) {
+        console.log('✅ Message sent successfully:', result);
+      }
       
       setMessage('');
       setShowPredefinedMessages(false);
@@ -173,15 +200,14 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
           }
         }, 500);
       } else {
-        // Refresh messages for existing chat
-        refetch();
+        // For existing chats, WebSocket will handle real-time updates
+        // Only refetch if WebSocket is not connected (fallback)
+        if (!webSocketService.isConnected()) {
+          refetch();
+        }
       }
       
-      dispatch(addToast({
-        type: 'success',
-        title: 'Message sent',
-        message: 'Your message has been sent successfully',
-      }));
+      // Don't show success toast for real-time chat - message appears immediately
     } catch (err: any) {
       // Handle specific error codes from backend
       const errorCode = err?.data?.code || err?.data?.error?.code;
@@ -209,6 +235,13 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
       }));
     }
   };
+
+  // Send typing indicator when user types
+  useEffect(() => {
+    if (message.trim() && canSendCustomMessages && realChatId) {
+      sendTyping(realChatId);
+    }
+  }, [message, canSendCustomMessages, realChatId, sendTyping]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && canSendCustomMessages) {
@@ -289,6 +322,19 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
               <span className="px-3 py-1 text-xs text-text-muted bg-surface rounded-full">
                 Today
               </span>
+            </div>
+          )}
+
+          {/* Typing Indicator */}
+          {isOtherUserTyping && !isConnectionChat && (
+            <div className="flex justify-start">
+              <div className="bg-surface border border-border rounded-2xl rounded-bl-sm px-4 py-2.5">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
             </div>
           )}
 

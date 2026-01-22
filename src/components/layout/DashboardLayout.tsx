@@ -1,8 +1,12 @@
 import { Outlet } from 'react-router-dom';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 
 export function DashboardLayout() {
+  // Initialize WebSocket connection for all protected routes
+  useWebSocket();
+  
   return (
     <div className="min-h-screen bg-background">
       <Header />

@@ -9,7 +9,8 @@ import {
   GripVertical,
   Image as ImageIcon,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -373,17 +374,31 @@ export function PhotosPage() {
                 />
 
                 {/* Badges - Always visible */}
-                <div className="absolute top-2 left-2 flex gap-2 z-10">
-                  {photo.isProfilePhoto && (
-                    <Badge variant="gold" className="text-xs">
-                      <Star className="w-3 h-3 mr-1 fill-current" />
-                      Profile
+                <div className="absolute top-2 left-2 flex flex-col gap-2 z-10">
+                  <div className="flex gap-2 flex-wrap">
+                    {photo.isProfilePhoto && (
+                      <Badge variant="gold" className="text-xs">
+                        <Star className="w-3 h-3 mr-1 fill-current" />
+                        Profile
+                      </Badge>
+                    )}
+                    {photo.isPrivate && (
+                      <Badge variant="outline" className="text-xs bg-black/50 text-white border-white/30">
+                        <EyeOff className="w-3 h-3 mr-1" />
+                        Private
+                      </Badge>
+                    )}
+                  </div>
+                  {/* Verification Status - Always shown for user's own profile */}
+                  {photo.isApproved ? (
+                    <Badge variant="success" className="text-xs shadow-md backdrop-blur-sm bg-success/90 text-white border-success">
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      Verified
                     </Badge>
-                  )}
-                  {photo.isPrivate && (
-                    <Badge variant="outline" className="text-xs bg-black/50 text-white border-white/30">
-                      <EyeOff className="w-3 h-3 mr-1" />
-                      Private
+                  ) : (
+                    <Badge variant="outline" className="text-xs shadow-md backdrop-blur-sm bg-warning/90 text-white border-warning">
+                      <XCircle className="w-3 h-3 mr-1" />
+                      Not Verified
                     </Badge>
                   )}
                 </div>

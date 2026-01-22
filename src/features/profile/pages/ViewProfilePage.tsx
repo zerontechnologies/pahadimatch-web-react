@@ -358,13 +358,20 @@ export function ViewProfilePage() {
           Back
         </Button>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleShortlist}
-            leftIcon={localShortlisted ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
-          >
-            {localShortlisted ? 'Shortlisted' : 'Shortlist'}
-          </Button>
+          {localShortlisted ? (
+            <Badge variant="accent" className="px-4 py-2 text-sm cursor-pointer" onClick={handleShortlist}>
+              <BookmarkCheck className="w-4 h-4 mr-1" />
+              Shortlisted
+            </Badge>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={handleShortlist}
+              leftIcon={<Bookmark className="w-4 h-4" />}
+            >
+              Shortlist
+            </Button>
+          )}
         </div>
       </div>
 
