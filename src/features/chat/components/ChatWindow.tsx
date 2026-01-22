@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn, getInitials } from '@/lib/utils';
-import { useGetChatMessagesQuery, useSendMessageMutation, useMarkMessagesAsReadMutation, useGetChatListQuery, useGetPredefinedMessagesQuery } from '@/store/api/chatApi';
+import { useGetChatMessagesQuery, useSendMessageMutation, useMarkMessagesAsReadMutation, useGetChatListQuery, useGetPredefinedMessagesQuery, chatApi } from '@/store/api/chatApi';
 import { useBlockProfileMutation } from '@/store/api/activityApi';
 import { useGetMembershipSummaryQuery } from '@/store/api/membershipApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -21,7 +21,6 @@ import { selectCurrentUser } from '@/store/slices/authSlice';
 import { addToast } from '@/store/slices/uiSlice';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
-import { webSocketService } from '@/lib/websocket';
 import type { Chat, MessageType } from '@/types';
 
 interface ChatWindowProps {
@@ -43,10 +42,13 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   const realChatId = isConnectionChat ? null : chat.id;
   
   // WebSocket connection for real-time updates
-  const { joinChat, leaveChat, sendTyping } = useWebSocket();
+  const { joinChat, leaveChat, sendTyping, stopTyping, sendMessage: sendMessageViaSocket, markAsRead: markAsReadViaSocket, isConnected } = useWebSocket();
   
   // Typing indicator for other user
   const isOtherUserTyping = useTypingIndicator(realChatId);
+  
+  // Typing timeout ref
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const { data, refetch } = useGetChatMessagesQuery(
     { chatId: realChatId || '', limit: 50 },
@@ -131,9 +133,14 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
   // Mark as read when chat opens (only for real chats)
   useEffect(() => {
     if (!isConnectionChat && chat.unreadCount > 0 && realChatId) {
-      markAsRead(realChatId);
+      // Use socket if connected, otherwise fallback to REST API
+      if (isConnected) {
+        markAsReadViaSocket(realChatId);
+      } else {
+        markAsRead(realChatId);
+      }
     }
-  }, [chat.id, chat.unreadCount, markAsRead, isConnectionChat, realChatId]);
+  }, [chat.id, chat.unreadCount, markAsRead, markAsReadViaSocket, isConnectionChat, realChatId, isConnected]);
 
   const handleSend = async (predefinedMessage?: string) => {
     const messageToSend = predefinedMessage || message.trim();
@@ -171,39 +178,86 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
         console.log('📤 Sending message:', { profileId: chat.participant.profileId, content: messageToSend, messageType });
       }
       
-      const result = await sendMessage({
-        profileId: chat.participant.profileId,
-        data: { 
+      // Use socket for real-time messaging if connected, otherwise fallback to REST API
+      // Note: Even when using REST API, the socket will receive new_message event if connected
+      if (isConnected && !isConnectionChat && realChatId) {
+        // Add optimistic update to show message immediately
+        const tempMessageId = `temp-${Date.now()}`;
+        const optimisticMessage = {
+          id: tempMessageId,
+          chatId: realChatId,
+          senderId: user?.id || '',
+          receiverId: '',
           content: messageToSend,
-          messageType: messageType
-        }
-      }).unwrap();
-      
-      if (import.meta.env.DEV) {
-        console.log('✅ Message sent successfully:', result);
-      }
-      
-      setMessage('');
-      setShowPredefinedMessages(false);
-      
-      // If this was a connection chat, refresh chat list to get the new chat
-      if (isConnectionChat) {
-        // Wait a bit for the backend to create the chat
-        setTimeout(async () => {
-          const chatListResult = await refetchChatList();
-          // Find the new chat by profileId
-          const newChat = chatListResult.data?.data?.find(
-            (c: Chat) => c.participant.profileId === chat.participant.profileId
-          );
-          if (newChat && onChatCreated) {
-            onChatCreated(newChat.id);
-          }
-        }, 500);
+          status: 'sending' as const,
+          createdAt: new Date().toISOString(),
+          messageType: messageType,
+          isOwn: true,
+        };
+
+        // Optimistically add message to cache
+        dispatch(
+          chatApi.util.updateQueryData(
+            'getChatMessages',
+            { chatId: realChatId, limit: 50 },
+            (draft) => {
+              if (!draft?.data) {
+                draft.data = [];
+              }
+              // Add to end (messages are typically sorted oldest first)
+              draft.data.push(optimisticMessage);
+            }
+          )
+        );
+
+        // Send via socket for real-time delivery
+        sendMessageViaSocket(chat.participant.profileId, messageToSend, messageType);
+        
+        // Clear input immediately for better UX
+        setMessage('');
+        setShowPredefinedMessages(false);
+        
+        // Stop typing indicator
+        stopTyping(realChatId, chat.participant.profileId);
+        
+        // WebSocket will handle the message_sent/new_message event and replace temp message
+        // The new_message event will be received by both sender and receiver
+        // The temp message will be replaced when the real message arrives
       } else {
-        // For existing chats, WebSocket will handle real-time updates
-        // Only refetch if WebSocket is not connected (fallback)
-        if (!webSocketService.isConnected()) {
-          refetch();
+        // Fallback to REST API (for connection chats or when socket is not connected)
+        const result = await sendMessage({
+          profileId: chat.participant.profileId,
+          data: { 
+            content: messageToSend,
+            messageType: messageType
+          }
+        }).unwrap();
+        
+        if (import.meta.env.DEV) {
+          console.log('✅ Message sent successfully:', result);
+        }
+        
+        setMessage('');
+        setShowPredefinedMessages(false);
+        
+        // If this was a connection chat, refresh chat list to get the new chat
+        if (isConnectionChat) {
+          // Wait a bit for the backend to create the chat
+          setTimeout(async () => {
+            const chatListResult = await refetchChatList();
+            // Find the new chat by profileId
+            const newChat = chatListResult.data?.data?.find(
+              (c: Chat) => c.participant.profileId === chat.participant.profileId
+            );
+            if (newChat && onChatCreated) {
+              onChatCreated(newChat.id);
+            }
+          }, 500);
+        } else {
+          // For existing chats, refetch if WebSocket is not connected
+          if (!isConnected) {
+            refetch();
+          }
         }
       }
       
@@ -236,12 +290,36 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
     }
   };
 
-  // Send typing indicator when user types
+  // Send typing indicator when user types (with debouncing)
   useEffect(() => {
-    if (message.trim() && canSendCustomMessages && realChatId) {
-      sendTyping(realChatId);
+    if (!realChatId || !canSendCustomMessages || !isConnected) {
+      return;
     }
-  }, [message, canSendCustomMessages, realChatId, sendTyping]);
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    if (message.trim()) {
+      // Send typing indicator
+      sendTyping(realChatId, chat.participant.profileId);
+      
+      // Auto-stop typing after 3 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        stopTyping(realChatId, chat.participant.profileId);
+      }, 3000);
+    } else {
+      // Stop typing if message is empty
+      stopTyping(realChatId, chat.participant.profileId);
+    }
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [message, canSendCustomMessages, realChatId, isConnected, chat.participant.profileId, sendTyping, stopTyping]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && canSendCustomMessages) {
@@ -385,7 +463,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
           <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
             {predefinedMessages.slice(0, 4).map((msg, idx) => (
               <Button
-                key={idx}
+                key={`quick-msg-${idx}-${msg.substring(0, 10)}`}
                 size="sm"
                 variant="outline"
                 onClick={() => handleSend(msg)}
@@ -420,7 +498,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
               ) : predefinedMessages.length > 0 ? (
                 predefinedMessages.map((msg, idx) => (
                   <Button
-                    key={idx}
+                    key={`predefined-msg-${idx}-${msg.substring(0, 10)}`}
                     size="sm"
                     variant="outline"
                     onClick={() => handleSend(msg)}

@@ -23,6 +23,18 @@ const globalTypingHandler = (data: SocketTyping) => {
   }
 };
 
+// Global stopped typing handler
+const globalStoppedTypingHandler = (data: SocketTyping) => {
+  const state = typingState.get(data.chatId);
+  if (state) {
+    state.setIsTyping(false);
+    if (state.timeoutRef.current) {
+      clearTimeout(state.timeoutRef.current);
+      state.timeoutRef.current = null;
+    }
+  }
+};
+
 export function useTypingIndicator(chatId: string | null) {
   const [isTyping, setIsTyping] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,9 +51,10 @@ export function useTypingIndicator(chatId: string | null) {
       timeoutRef,
     });
 
-    // Set up global typing handler if not already set
+    // Set up global typing handlers (user_typing and user_stopped_typing)
     webSocketService.setHandlers({
-      onTyping: globalTypingHandler,
+      onUserTyping: globalTypingHandler,
+      onUserStoppedTyping: globalStoppedTypingHandler,
     });
 
     return () => {

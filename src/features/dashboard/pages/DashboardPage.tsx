@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Heart, 
-  Users, 
+  Heart,
   MessageSquare, 
   Eye, 
   Sparkles, 
@@ -388,6 +387,15 @@ export function DashboardPage() {
                         }}
                       >
                         View
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={(e) => handleDeclineInterest(e, interest.id)}
+                        isLoading={isDeclining}
+                        disabled={isAccepting || isDeclining}
+                      >
+                        Decline
                       </Button>
                       <Button 
                         size="sm" 

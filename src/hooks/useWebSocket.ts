@@ -3,13 +3,15 @@ import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { selectAuthToken, selectIsAuthenticated, selectCurrentUser } from '@/store/slices/authSlice';
 import { webSocketService } from '@/lib/websocket';
 import { chatApi } from '@/store/api/chatApi';
+import { addToast } from '@/store/slices/uiSlice';
 import type { 
   SocketNewMessage, 
   SocketMessageSent, 
   SocketTyping, 
   SocketMessagesRead,
   SocketMessagesDelivered,
-  SocketMessageDeleted
+  SocketMessageDeleted,
+  MessageType
 } from '@/types';
 
 export function useWebSocket() {
@@ -20,7 +22,8 @@ export function useWebSocket() {
   const handlersRef = useRef<{
     onNewMessage?: (data: SocketNewMessage) => void;
     onMessageSent?: (data: SocketMessageSent) => void;
-    onTyping?: (data: SocketTyping) => void;
+    onUserTyping?: (data: SocketTyping) => void;
+    onUserStoppedTyping?: (data: SocketTyping) => void;
     onMessagesRead?: (data: SocketMessagesRead) => void;
     onMessagesDelivered?: (data: SocketMessagesDelivered) => void;
     onMessageDeleted?: (data: SocketMessageDeleted) => void;
@@ -55,6 +58,7 @@ export function useWebSocket() {
 
         // Get current user to determine receiverId
         const currentUserId = currentUser?.id || '';
+        const isOwnMessage = currentUserId === data.senderId;
         
         // Update messages cache for the chat (if cache exists)
         const updateResult = dispatch(
@@ -68,12 +72,24 @@ export function useWebSocket() {
               }
               
               // Check if message already exists (avoid duplicates)
-              const exists = draft.data.some((msg) => msg.id === data.messageId);
-              if (!exists) {
+              const existingIndex = draft.data.findIndex((msg) => msg.id === data.messageId);
+              
+              if (existingIndex === -1) {
+                // Message doesn't exist, check if there's a temp message to replace (for sender's own messages)
+                let tempMessageIndex = -1;
+                if (isOwnMessage) {
+                  // Find temp message with matching content (sent recently, within last 5 seconds)
+                  const fiveSecondsAgo = Date.now() - 5000;
+                  tempMessageIndex = draft.data.findIndex(
+                    (msg) => msg.id.startsWith('temp-') && 
+                             msg.content === data.content &&
+                             msg.senderId === data.senderId &&
+                             new Date(msg.createdAt).getTime() > fiveSecondsAgo
+                  );
+                }
+                
                 // Determine receiverId: if current user is not the sender, they are the receiver
-                // Otherwise, we need to get receiverId from the chat or leave it empty
-                // For now, we'll set it based on who is viewing (if not sender, they're receiver)
-                const receiverId = currentUserId && currentUserId !== data.senderId ? currentUserId : '';
+                const receiverId = currentUserId && !isOwnMessage ? currentUserId : '';
                 
                 // Create new message object
                 const newMessage = {
@@ -85,25 +101,30 @@ export function useWebSocket() {
                   status: 'sent' as const,
                   createdAt: data.createdAt,
                   messageType: data.messageType,
-                  isOwn: currentUserId === data.senderId,
+                  isOwn: isOwnMessage,
                 };
                 
-                // Determine message order: if messages are sorted by createdAt ascending (oldest first)
-                // add to end, otherwise add to beginning
-                const messages = draft.data;
-                if (messages.length === 0) {
-                  messages.push(newMessage);
+                if (tempMessageIndex !== -1) {
+                  // Replace temp message with real message
+                  draft.data[tempMessageIndex] = newMessage;
                 } else {
-                  // Check if messages are sorted ascending (oldest first) or descending (newest first)
-                  const isAscending = messages.length > 1 && 
-                    new Date(messages[0].createdAt).getTime() < new Date(messages[messages.length - 1].createdAt).getTime();
-                  
-                  if (isAscending) {
-                    // Oldest first: add new message to end
+                  // Determine message order: if messages are sorted by createdAt ascending (oldest first)
+                  // add to end, otherwise add to beginning
+                  const messages = draft.data;
+                  if (messages.length === 0) {
                     messages.push(newMessage);
                   } else {
-                    // Newest first: add new message to beginning
-                    messages.unshift(newMessage);
+                    // Check if messages are sorted ascending (oldest first) or descending (newest first)
+                    const isAscending = messages.length > 1 && 
+                      new Date(messages[0].createdAt).getTime() < new Date(messages[messages.length - 1].createdAt).getTime();
+                    
+                    if (isAscending) {
+                      // Oldest first: add new message to end
+                      messages.push(newMessage);
+                    } else {
+                      // Newest first: add new message to beginning
+                      messages.unshift(newMessage);
+                    }
                   }
                 }
               }
@@ -123,13 +144,34 @@ export function useWebSocket() {
 
       onMessageSent: (data: SocketMessageSent) => {
         // Update message status in cache
+        // This can also replace temp messages if the messageId matches a temp one
         dispatch(
           chatApi.util.updateQueryData(
             'getChatMessages',
             { chatId: data.chatId, limit: 50 },
             (draft) => {
               if (draft?.data) {
-                const message = draft.data.find((msg) => msg.id === data.messageId);
+                // First try to find by exact messageId
+                let message = draft.data.find((msg) => msg.id === data.messageId);
+                
+                // If not found and this is a sent status, it might be replacing a temp message
+                // Find the most recent temp message (for sender's own messages)
+                if (!message && data.status === 'sent') {
+                  const tempMessages = draft.data.filter((msg) => msg.id.startsWith('temp-'));
+                  if (tempMessages.length > 0) {
+                    // Get the most recent temp message (should be the one we just sent)
+                    const mostRecentTemp = tempMessages.sort((a, b) => 
+                      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    )[0];
+                    if (mostRecentTemp) {
+                      // Update the temp message with real ID and status
+                      mostRecentTemp.id = data.messageId;
+                      mostRecentTemp.status = data.status;
+                      message = mostRecentTemp;
+                    }
+                  }
+                }
+                
                 if (message) {
                   message.status = data.status;
                 }
@@ -182,7 +224,37 @@ export function useWebSocket() {
       },
     };
 
-    webSocketService.setHandlers(handlersRef.current);
+    // Set handlers (typing handlers are managed separately by useTypingIndicator)
+    // Also set up error handler
+    webSocketService.setHandlers({
+      ...handlersRef.current,
+      onError: (error: { message: string; code?: string }) => {
+        if (import.meta.env.DEV) {
+          console.error('❌ Socket error:', error);
+        }
+        
+        // Handle specific error codes
+        let title = 'Chat Error';
+        let message = error.message || 'An error occurred';
+        
+        if (error.code === 'PREMIUM_REQUIRED') {
+          title = 'Premium Required';
+          message = 'Upgrade to premium to send custom messages. You can send predefined messages instead.';
+        } else if (error.code === 'INTEREST_REQUIRED') {
+          title = 'Connection Required';
+          message = 'Both users must accept interest before chatting.';
+        } else if (error.code === 'INVALID_PREDEFINED_MESSAGE') {
+          title = 'Invalid Message';
+          message = 'Invalid predefined message. Please select from available options.';
+        }
+        
+        dispatch(addToast({
+          type: 'error',
+          title,
+          message,
+        }));
+      },
+    });
     
     if (import.meta.env.DEV) {
       console.log('✅ WebSocket handlers registered');
@@ -197,8 +269,20 @@ export function useWebSocket() {
     };
   }, [dispatch, currentUser]);
 
-  const sendTyping = useCallback((chatId: string) => {
-    webSocketService.sendTyping(chatId);
+  const sendMessage = useCallback((
+    receiverProfileId: string,
+    content: string,
+    messageType: MessageType = 'custom'
+  ) => {
+    webSocketService.sendMessage(receiverProfileId, content, messageType);
+  }, []);
+
+  const sendTyping = useCallback((chatId: string, receiverProfileId: string) => {
+    webSocketService.sendTyping(chatId, receiverProfileId);
+  }, []);
+
+  const stopTyping = useCallback((chatId: string, receiverProfileId: string) => {
+    webSocketService.stopTyping(chatId, receiverProfileId);
   }, []);
 
   const joinChat = useCallback((chatId: string) => {
@@ -209,11 +293,18 @@ export function useWebSocket() {
     webSocketService.leaveChat(chatId);
   }, []);
 
+  const markAsRead = useCallback((chatId: string) => {
+    webSocketService.markAsRead(chatId);
+  }, []);
+
   return {
     isConnected: webSocketService.isConnected(),
+    sendMessage,
     sendTyping,
+    stopTyping,
     joinChat,
     leaveChat,
+    markAsRead,
   };
 }
 
