@@ -189,7 +189,7 @@ export function ChatWindow({ chat, onBack, onChatCreated }: ChatWindowProps) {
           senderId: user?.id || '',
           receiverId: '',
           content: messageToSend,
-          status: 'sending' as const,
+          status: 'sent' as const, // Use 'sent' status (valid MessageStatus type)
           createdAt: new Date().toISOString(),
           messageType: messageType,
           isOwn: true,
