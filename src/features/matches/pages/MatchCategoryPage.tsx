@@ -140,15 +140,12 @@ export function MatchCategoryPage() {
           description={
             categoryId === 'shortlisted_profiles'
               ? 'Shortlist profiles you like to find them here quickly'
-              : "We couldn't find any profiles matching this category. Try updating your preferences."
+              : "We couldn't find any profiles matching this category."
           }
           action={
             categoryId === 'shortlisted_profiles'
               ? undefined
-              : {
-                  label: 'Update Preferences',
-                  onClick: () => {},
-                }
+              : undefined
           }
         />
       )}

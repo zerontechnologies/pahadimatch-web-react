@@ -39,13 +39,9 @@ export function LandingPage() {
             <div className="hidden md:flex items-center gap-8">
               <a href="#how-it-works" className="text-text hover:text-primary transition-colors">How It Works</a>
               <a href="#success-stories" className="text-text hover:text-primary transition-colors">Success Stories</a>
-              <a href="#about" className="text-text hover:text-primary transition-colors">About</a>
             </div>
 
             <div className="flex items-center gap-4">
-              <button className="p-2 text-text hover:text-primary transition-colors">
-                <span className="text-sm">हिं</span>
-              </button>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -522,16 +518,6 @@ export function LandingPage() {
                 <li><a href="#" className="hover:text-white transition-colors">Safety Tips</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Community Guidelines</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-white/80">
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Refund Policy</a></li>
               </ul>
             </div>
           </div>

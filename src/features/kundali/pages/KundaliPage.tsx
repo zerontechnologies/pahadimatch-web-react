@@ -18,6 +18,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { CreateKundaliRequest } from '@/types';
+import { DatePicker } from '@/components/ui';
 
 export function KundaliPage() {
   const navigate = useNavigate();
@@ -249,21 +250,29 @@ export function KundaliPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Date of Birth <span className="text-error">*</span>
-                  </label>
-                  <Input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => updateField('dateOfBirth', e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
-                    error={errors.dateOfBirth}
-                    required
-                  />
+                  <DatePicker
+                        label="Date of Birth *"
+                        value={formData.dateOfBirth || ''}
+                        onChange={(val) => {
+                          if (!val) return;
+                      
+                          const [year, month, day] = val.split('-').map(Number);
+                      
+                          // ADD +1 DAY to compensate UTC shift
+                          const correctedDate = new Date(year, month - 1, day + 1);
+                      
+                          const yyyy = correctedDate.getFullYear();
+                          const mm = String(correctedDate.getMonth() + 1).padStart(2, '0');
+                          const dd = String(correctedDate.getDate()).padStart(2, '0');
+                      
+                          updateField('dateOfBirth', `${yyyy}-${mm}-${dd}`);
+                        }}
+                        placeholder="Choose your birth date"
+                        error={errors.dateOfBirth}
+                      />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
                     Time of Birth <span className="text-error">*</span>
                   </label>
                   <Input

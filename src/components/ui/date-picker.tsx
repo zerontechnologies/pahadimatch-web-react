@@ -110,7 +110,7 @@ export function DatePicker({
   };
 
   return (
-    <div className="space-y-1.5 relative z-1000">
+    <div className="space-y-1.5 relative z-1">
       {label && (
         <label className="block text-sm font-medium text-text-secondary mb-1">
           {label}
