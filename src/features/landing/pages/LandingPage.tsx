@@ -22,7 +22,7 @@ import { motion } from 'framer-motion';
 
 export function LandingPage() {
   const navigate = useNavigate();
-  
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -42,17 +42,17 @@ export function LandingPage() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => navigate('/login')}
                 className="hidden sm:flex"
               >
                 Login
               </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
+              <Button
+                variant="default"
+                size="sm"
                 onClick={() => navigate('/signup')}
                 className="hidden sm:flex"
               >
@@ -66,7 +66,7 @@ export function LandingPage() {
       {/* Hero Section */}
       <section className="relative pt-24 pb-20 overflow-hidden min-h-[600px] flex items-center">
         {/* Ganesha Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: 'url(/temple.png)'
@@ -76,7 +76,7 @@ export function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-primary-50/60 to-cream/20"></div>
         <div className="absolute inset-0 bg-gradient-to-t via-transparent to-transparent"></div>
         <div className="absolute inset-0 pattern-mandala opacity-20"></div>
-        
+
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <motion.div
@@ -119,16 +119,16 @@ export function LandingPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="w-full sm:w-auto"
                 onClick={() => navigate('/signup')}
               >
                 Get Started
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="w-full sm:w-auto bg-white"
                 onClick={() => navigate('/login')}
               >
@@ -380,7 +380,7 @@ export function LandingPage() {
 
       {/* Final CTA Section */}
       <section className="relative py-20 overflow-hidden">
-      <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: 'url(/ganesha.jpg)'
@@ -390,7 +390,7 @@ export function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-primary-50/60 to-cream/20"></div>
         <div className="absolute inset-0 bg-gradient-to-t via-transparent to-transparent"></div>
         <div className="absolute inset-0 pattern-mandala opacity-20"></div>
-        
+
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
             <motion.h2
@@ -418,16 +418,16 @@ export function LandingPage() {
               transition={{ delay: 0.2 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8"
             >
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="w-full sm:w-auto"
                 onClick={() => navigate('/signup')}
               >
                 Get Started
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="w-full sm:w-auto bg-white"
                 onClick={() => navigate('/login')}
               >
@@ -492,16 +492,27 @@ export function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-white/80">
-                <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Press</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li>
+                  <a href="#about" className="hover:text-white transition-colors">
+                    About Us
+                  </a>
+                </li>
+                <li>
+                  <a href="/terms" className="hover:text-white transition-colors">
+                    Terms &amp; Conditions
+                  </a>
+                </li>
+                <li>
+                  <a href="/privacy" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </a>
+                </li>
               </ul>
               <div className="mt-4 text-sm text-white/60">
                 Powered by{' '}
-                <a 
-                  href="https://zerontech.com" 
-                  target="_blank" 
+                <a
+                  href="https://zerontech.com"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors underline"
                 >

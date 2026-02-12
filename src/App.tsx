@@ -27,6 +27,8 @@ const ViewProfilePage = lazy(() => import('./features/profile').then(m => ({ def
 const SettingsPage = lazy(() => import('./features/settings').then(m => ({ default: m.SettingsPage })));
 const NotificationsPage = lazy(() => import('./features/notifications/pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const KundaliPage = lazy(() => import('./features/kundali/pages/KundaliPage').then(m => ({ default: m.KundaliPage })));
+const PrivacyPage = lazy(() => import('./features/privacy/pages/PrivacyPage').then(m=>({default:m.PrivacyPage})));
+const TermsPage = lazy(() => import('./features/terms').then(m => ({ default: m.TermsPage })));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -101,6 +103,28 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <VerifyOtpPage />
                 </Suspense>
+              }
+            />
+
+            <Route
+              path="/privacy"
+              element={
+                <PublicRoute allowAuthenticated>
+                  <Suspense fallback={<PageLoader />}>
+                    <PrivacyPage />
+                  </Suspense>
+                </PublicRoute>
+              }
+            />
+
+            <Route
+              path="/terms"
+              element={
+                <PublicRoute allowAuthenticated>
+                  <Suspense fallback={<PageLoader />}>
+                    <TermsPage />
+                  </Suspense>
+                </PublicRoute>
               }
             />
 
@@ -244,6 +268,8 @@ function App() {
             >
               <Route index element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
             </Route>
+
+
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

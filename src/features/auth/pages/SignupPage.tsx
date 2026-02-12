@@ -10,6 +10,7 @@ import { useSendOtpMutation } from '@/store/api/authApi';
 import { useAppDispatch } from '@/store/hooks';
 import { addToast } from '@/store/slices/uiSlice';
 import { isValidPhone } from '@/lib/utils';
+import { Link } from "react-router-dom";
 
 const benefits = [
   { icon: Shield, text: 'Privacy-first approach with controlled visibility' },
@@ -45,7 +46,7 @@ export function SignupPage() {
 
     try {
       const result = await sendOtp({ phone, purpose: 'signup' }).unwrap();
-      
+
       if (result.success) {
         dispatch(addToast({
           type: 'success',
@@ -56,7 +57,7 @@ export function SignupPage() {
       }
     } catch (err: any) {
       const errorMessage = err?.data?.message || 'Failed to send OTP. Please try again.';
-      
+
       // If user already registered, redirect to login
       if (errorMessage.includes('already registered')) {
         dispatch(addToast({
@@ -67,7 +68,7 @@ export function SignupPage() {
         navigate('/login', { state: { phone } });
         return;
       }
-      
+
       setError(errorMessage);
     }
   };
@@ -127,26 +128,18 @@ export function SignupPage() {
               onCheckedChange={(checked) => setAgreed(checked as boolean)}
             />
           </div>
-          <label 
-            htmlFor="terms" 
+          <label
+            htmlFor="terms"
             className="text-sm text-text-secondary cursor-pointer leading-relaxed flex-1"
           >
-            I agree to the{' '}
-            <a 
-              href="/terms" 
-              className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary-200 rounded px-0.5 transition-colors"
-              onClick={(e) => e.preventDefault()}
-            >
-              Terms of Service
-            </a>
-            {' '}and{' '}
-            <a 
-              href="/privacy" 
-              className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary-200 rounded px-0.5 transition-colors"
-              onClick={(e) => e.preventDefault()}
-            >
+            By continuing, you agree to our{" "}
+            <Link to="/terms" className="underline text-primary">
+              Terms &amp; Conditions
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" className="underline text-primary">
               Privacy Policy
-            </a>
+            </Link>.
           </label>
         </div>
 
