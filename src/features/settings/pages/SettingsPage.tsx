@@ -16,10 +16,20 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useGetOwnProfileQuery, useUpdatePrivacyMutation, useUpdateNotificationSettingsMutation } from '@/store/api/profileApi';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { selectCurrentUser } from '@/store/slices/authSlice';
+import { selectCurrentUser, updateUser } from '@/store/slices/authSlice';
 import { addToast } from '@/store/slices/uiSlice';
+import { useChangePhoneMutation, useVerifyPhoneChangeMutation } from '@/store/api/authApi';
 
 export function SettingsPage() {
   const dispatch = useAppDispatch();
@@ -27,7 +37,9 @@ export function SettingsPage() {
   const { data: profile } = useGetOwnProfileQuery();
   const [updatePrivacy, { isLoading: isUpdatingPrivacy }] = useUpdatePrivacyMutation();
   const [updateNotificationSettings, { isLoading: isUpdatingNotifications }] = useUpdateNotificationSettingsMutation();
-  
+  const [changePhone, { isLoading: isSendingPhoneOtp }] = useChangePhoneMutation();
+  const [verifyPhoneChange, { isLoading: isVerifyingPhone }] = useVerifyPhoneChangeMutation();
+
   const profileData = profile?.data;
   const privacySettings = profileData?.privacySettings || {
     phonePrivate: false,
@@ -46,6 +58,10 @@ export function SettingsPage() {
 
   const [privacy, setPrivacy] = useState(privacySettings);
   const [notifications, setNotifications] = useState(notificationSettings);
+  const [isPhoneDialogOpen, setIsPhoneDialogOpen] = useState(false);
+  const [phoneStep, setPhoneStep] = useState<'enter' | 'verify'>('enter');
+  const [newPhone, setNewPhone] = useState(user?.phone || '');
+  const [phoneOtp, setPhoneOtp] = useState('');
 
   // Sync settings when profile data changes
   useEffect(() => {
@@ -57,10 +73,16 @@ export function SettingsPage() {
     }
   }, [profileData]);
 
+  const resetPhoneDialog = () => {
+    setPhoneStep('enter');
+    setNewPhone(user?.phone || '');
+    setPhoneOtp('');
+  };
+
   const handlePrivacyChange = async (field: keyof typeof privacy, value: boolean) => {
     const updatedPrivacy = { ...privacy, [field]: value };
     setPrivacy(updatedPrivacy);
-    
+
     try {
       await updatePrivacy(updatedPrivacy).unwrap();
       dispatch(addToast({
@@ -82,7 +104,7 @@ export function SettingsPage() {
   const handleNotificationChange = async (field: keyof typeof notifications, value: boolean) => {
     const updatedNotifications = { ...notifications, [field]: value };
     setNotifications(updatedNotifications);
-    
+
     try {
       await updateNotificationSettings(updatedNotifications).unwrap();
       dispatch(addToast({
@@ -99,6 +121,70 @@ export function SettingsPage() {
         message: err?.data?.message || 'Failed to update notification settings',
       }));
     }
+  };
+
+  const handleSendPhoneOtp = async () => {
+    if (!newPhone) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Invalid Phone',
+        message: 'Please enter a valid phone number',
+      }));
+      return;
+    }
+
+    try {
+      await changePhone({ newPhone }).unwrap();
+      dispatch(addToast({
+        type: 'success',
+        title: 'OTP Sent',
+        message: 'We have sent an OTP to your new phone number',
+      }));
+      setPhoneStep('verify');
+    } catch (err: any) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Error',
+        message: err?.data?.message || 'Failed to send OTP. Please try again.',
+      }));
+    }
+  };
+
+  const handleVerifyPhoneChange = async () => {
+    if (!phoneOtp) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Invalid OTP',
+        message: 'Please enter the OTP sent to your new phone number',
+      }));
+      return;
+    }
+
+    try {
+      await verifyPhoneChange({ newPhone, otp: phoneOtp }).unwrap();
+      dispatch(updateUser({ phone: newPhone }));
+      dispatch(addToast({
+        type: 'success',
+        title: 'Phone Updated',
+        message: 'Your phone number has been updated successfully',
+      }));
+      setIsPhoneDialogOpen(false);
+      resetPhoneDialog();
+    } catch (err: any) {
+      dispatch(addToast({
+        type: 'error',
+        title: 'Error',
+        message: err?.data?.message || 'Failed to verify OTP. Please try again.',
+      }));
+    }
+  };
+
+  const handleEmailChangeClick = () => {
+    dispatch(addToast({
+      type: 'info',
+      title: 'Coming Soon',
+      message: 'Email change functionality is not available yet.',
+    }));
   };
 
   return (
@@ -229,9 +315,77 @@ export function SettingsPage() {
                     disabled
                     className="bg-champagne"
                   />
-                  <Button variant="outline" size="sm">
-                    Change
-                  </Button>
+                  <Dialog
+                    open={isPhoneDialogOpen}
+                    onOpenChange={(open) => {
+                      setIsPhoneDialogOpen(open);
+                      if (!open) {
+                        resetPhoneDialog();
+                      }
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        Change
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Change Phone Number</DialogTitle>
+                        <DialogDescription>
+                          Update your phone number. We&apos;ll send an OTP to your new number for verification.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-2">
+                        <div>
+                          <label className="text-sm font-medium text-text-secondary">Current Phone</label>
+                          <Input
+                            value={user?.phone || 'Not set'}
+                            disabled
+                            className="bg-champagne mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-text-secondary">New Phone Number</label>
+                          <Input
+                            value={newPhone}
+                            onChange={(e) => setNewPhone(e.target.value)}
+                            className="mt-1"
+                            disabled={phoneStep === 'verify' || isSendingPhoneOtp || isVerifyingPhone}
+                            placeholder="Enter new phone number"
+                          />
+                        </div>
+                        {phoneStep === 'verify' && (
+                          <div>
+                            <label className="text-sm font-medium text-text-secondary">OTP</label>
+                            <Input
+                              value={phoneOtp}
+                              onChange={(e) => setPhoneOtp(e.target.value)}
+                              className="mt-1"
+                              placeholder="Enter OTP sent to your new phone"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <DialogFooter>
+                        {phoneStep === 'enter' ? (
+                          <Button
+                            onClick={handleSendPhoneOtp}
+                            disabled={isSendingPhoneOtp}
+                          >
+                            {isSendingPhoneOtp ? 'Sending OTP...' : 'Send OTP'}
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={handleVerifyPhoneChange}
+                            disabled={isVerifyingPhone}
+                          >
+                            {isVerifyingPhone ? 'Verifying...' : 'Verify & Update'}
+                          </Button>
+                        )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
 
@@ -243,7 +397,7 @@ export function SettingsPage() {
                     disabled
                     className="bg-champagne"
                   />
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={handleEmailChangeClick}>
                     Change
                   </Button>
                 </div>
