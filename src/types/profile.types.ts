@@ -9,7 +9,16 @@ export type FamilyType = 'joint' | 'nuclear';
 export type FamilyStatus = 'middle_class' | 'upper_middle_class' | 'rich' | 'affluent';
 export type Diet = 'vegetarian' | 'non_vegetarian' | 'eggetarian' | 'vegan';
 export type Habit = 'yes' | 'no' | 'occasionally';
-export type BodyType = 'slim' | 'average' | 'athletic' | 'heavy';
+export type BodyType =
+  | 'slim'
+  | 'average'
+  | 'athletic'
+  | 'heavy'
+  | 'hourglass'
+  | 'pear'
+  | 'apple'
+  | 'rectangle'
+  | 'inverted_triangle';
 export type Complexion = 'very_fair' | 'fair' | 'wheatish' | 'dark';
 export type Origin = 'garhwali' | 'kumaoni' | 'jonsari' | 'other';
 export type Community = 'garhwali' | 'kumaoni' | 'jonsari' | 'other';

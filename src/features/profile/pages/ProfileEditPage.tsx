@@ -84,6 +84,15 @@ const BODY_TYPES = [
   { value: 'heavy', label: 'Heavy' },
 ];
 
+const FEMALE_BODY_TYPES = [
+  ...BODY_TYPES,
+  { value: 'hourglass', label: 'Hourglass' },
+  { value: 'pear', label: 'Pear (Triangle)' },
+  { value: 'apple', label: 'Apple (Round)' },
+  { value: 'rectangle', label: 'Rectangle (H)' },
+  { value: 'inverted_triangle', label: 'Inverted Triangle (V)' },
+];
+
 const COMPLEXION_OPTIONS = [
   { value: 'very_fair', label: 'Very Fair' },
   { value: 'fair', label: 'Fair' },
@@ -633,7 +642,7 @@ export function ProfileEditPage() {
                         <SelectValue placeholder="Select body type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {BODY_TYPES.map((opt) => (
+                        {(formData.gender === 'female' ? FEMALE_BODY_TYPES : BODY_TYPES).map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
                           </SelectItem>
