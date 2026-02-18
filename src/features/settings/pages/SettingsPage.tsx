@@ -389,8 +389,8 @@ export function SettingsPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-text-secondary">Email</label>
+              {/* <div>
+                { <label className="text-sm font-medium text-text-secondary">Email</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Input
                     value="Not available"
@@ -400,12 +400,12 @@ export function SettingsPage() {
                   <Button variant="outline" size="sm" onClick={handleEmailChangeClick}>
                     Change
                   </Button>
-                </div>
-              </div>
+                </div> }
+              </div> */}
 
-              <Separator />
+              {/* <Separator /> */}
 
-              <div className="p-4 rounded-xl bg-warning/5 border border-warning/20">
+              {/* <div className="p-4 rounded-xl bg-warning/5 border border-warning/20">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
                   <div>
@@ -418,7 +418,7 @@ export function SettingsPage() {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </TabsContent>
