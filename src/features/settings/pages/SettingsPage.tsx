@@ -8,7 +8,6 @@ import {
   Phone, 
   Key,
   Eye,
-  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -179,13 +178,13 @@ export function SettingsPage() {
     }
   };
 
-  const handleEmailChangeClick = () => {
-    dispatch(addToast({
-      type: 'info',
-      title: 'Coming Soon',
-      message: 'Email change functionality is not available yet.',
-    }));
-  };
+  // const handleEmailChangeClick = () => {
+  //   dispatch(addToast({
+  //     type: 'info',
+  //     title: 'Coming Soon',
+  //     message: 'Email change functionality is not available yet.',
+  //   }));
+  // };
 
   return (
     <motion.div
