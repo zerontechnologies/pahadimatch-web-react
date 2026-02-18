@@ -37,7 +37,7 @@ export function TermsPage() {
                     Terms &amp; Conditions
                   </h1>
                   <p className="text-text-secondary text-sm">
-                    Last updated: Date
+                    Last updated: 12-02-2026
                   </p>
                   <p className="mt-4 text-sm text-text-muted leading-relaxed">
                     Welcome to PahadiMatch, an online matrimonial platform
