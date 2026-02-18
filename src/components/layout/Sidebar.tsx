@@ -63,7 +63,7 @@ function NavSection({ title, items }: { title?: string; items: NavItem[] }) {
           key={item.path}
           to={item.path}
           onClick={() => dispatch(setMobileMenuOpen(false))}
-          end={item.path === '/profile'} // Only match exactly for /profile, not /profile/:id
+          end={item.path === '/profile' || item.path === '/matches'} // Exact match for /profile and /matches only
           className={({ isActive }) => cn(
             'flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
             isActive
