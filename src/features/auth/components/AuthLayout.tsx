@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -26,9 +25,11 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
           >
             {/* Logo */}
             <div className="flex items-center justify-center mb-4 lg:mb-6">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/30">
-                <Heart className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-white" fill="white" />
-              </div>
+              <img 
+                src="/pahadi_match_full.png" 
+                alt="PahadiMatch" 
+                className="w-32 h-16 lg:w-40 lg:h-20 xl:w-48 xl:h-24 object-contain"
+              />
             </div>
             
             {/* Brand Name */}
@@ -65,7 +66,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
             {/* Decorative Line */}
             <div className="flex items-center justify-center gap-4 pt-4 lg:pt-6">
               <div className="w-16 lg:w-20 h-0.5 bg-gradient-to-r from-transparent to-primary-200" />
-              <Heart className="w-5 h-5 lg:w-6 lg:h-6 text-primary animate-heartbeat" />
+              <div className="w-5 h-5 lg:w-6 lg:h-6 text-primary">❤️</div>
               <div className="w-16 lg:w-20 h-0.5 bg-gradient-to-l from-transparent to-primary-200" />
             </div>
           </motion.div>
@@ -94,9 +95,11 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
         >
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/30">
-              <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="white" />
-            </div>
+            <img 
+              src="/pahadi_match_logo_mobile.png" 
+              alt="PahadiMatch" 
+              className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
+            />
             <span className="font-script text-2xl sm:text-3xl text-primary">PahadiMatch</span>
           </div>
 
