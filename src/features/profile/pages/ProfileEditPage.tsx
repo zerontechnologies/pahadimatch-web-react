@@ -462,14 +462,20 @@ export function ProfileEditPage() {
                   <Input
                     label="First Name"
                     value={formData.firstName || ''}
-                    onChange={(e) => updateField('firstName', e.target.value.trim())}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^A-Za-z\s]/g, ''); // Remove everything except letters and spaces
+                      updateField('firstName', value.trim());
+                    }}
                     error={errors.firstName}
                     required
                   />
                   <Input
                     label="Last Name"
                     value={formData.lastName || ''}
-                    onChange={(e) => updateField('lastName', e.target.value.trim())}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^A-Za-z\s]/g, ''); // Remove everything except letters and spaces
+                      updateField('lastName', value.trim());
+                    }}
                     error={errors.lastName}
                     required
                   />
@@ -833,7 +839,7 @@ export function ProfileEditPage() {
                 <Input
                   label="Occupation Detail"
                   value={formData.occupationDetail || ''}
-                  onChange={(e) => updateField('occupationDetail', e.target.value.trim())}
+                  onChange={(e) => updateField('occupationDetail', e.target.value)}
                   placeholder="e.g., Software Engineer"
                 />
 
