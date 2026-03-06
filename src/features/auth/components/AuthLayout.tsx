@@ -10,7 +10,14 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] gradient-hero relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden" style={{
+        backgroundImage: 'url("/auth_background.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        {/* Dark Overlay for Contrast */}
+        <div className="absolute inset-0 bg-black/40" />
         {/* Decorative Elements */}
         <div className="absolute inset-0 pattern-mandala opacity-50" />
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl" />
@@ -34,12 +41,11 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
             
             {/* Brand Name */}
             <div className="space-y-2 lg:space-y-3">
-              <h1 className="font-script text-5xl lg:text-6xl xl:text-7xl text-primary leading-tight">
-                PahadiMatch
-              </h1>
-              <p className="font-display text-xl lg:text-2xl xl:text-3xl text-secondary">
-                Where Mountains Meet Hearts
-              </p>
+              <div className="backdrop-blur-sm bg-white/20 rounded-lg px-4 py-2">
+                <p className="font-display text-base lg:text-lg xl:text-xl text-white text-center">
+                  Where Mountains Meet Hearts
+                </p>
+              </div>
             </div>
             
             {/* Features */}

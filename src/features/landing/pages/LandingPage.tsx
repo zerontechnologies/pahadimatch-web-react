@@ -155,10 +155,22 @@ export function LandingPage() {
               >
                 <div>
                   <h3 className="text-2xl font-semibold text-text mb-2">Download Our App</h3>
+                </div>
+
+                {/* Mobile App Screenshot */}
+                <div className="flex justify-center lg:justify-end">
+                  <img 
+                    src="/pahadimatch-2.png" 
+                    alt="PahadiMatch Mobile App Screenshot" 
+                    className="w-48 h-auto object-contain drop-shadow-2xl rounded-lg"
+                  />
+                </div>
+
+                <div>
                   <p className="text-text-secondary mb-6">Get the PahadiMatch app and find your perfect match on the go!</p>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 items-center justify-end">
                   {/* App Store Button */}
                   <a
                     href="#"
