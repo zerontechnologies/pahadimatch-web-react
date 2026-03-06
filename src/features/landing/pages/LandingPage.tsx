@@ -505,12 +505,19 @@ export function LandingPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="/terms" className="hover:text-white transition-colors">
-                    Terms &amp; Conditions
+                  <a 
+                    href="/terms" 
+                    className="hover:text-white transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                     Terms &amp; Conditions
                   </a>
                 </li>
                 <li>
-                  <a href="/privacy" className="hover:text-white transition-colors">
+                  <a href="/privacy" className="hover:text-white transition-colors"
+                  target="_blank"
+                    rel="noopener noreferrer">
                     Privacy Policy
                   </a>
                 </li>
