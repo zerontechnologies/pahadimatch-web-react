@@ -166,9 +166,9 @@ export function Sidebar() {
               {/* Logo */}
               <div className="p-4 border-b border-border">
                 <img 
-                  src="/pahadi_match_logo_mobile.png" 
+                  src="/pahadi_match_full.png" 
                   alt="PahadiMatch" 
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                  className="w-18 h-12 sm:w-14 sm:h-15 object-contain"
                 />
               </div>
               
