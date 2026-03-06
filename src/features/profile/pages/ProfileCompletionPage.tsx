@@ -485,7 +485,11 @@ export function ProfileCompletionPage() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
               <Heart className="w-5 h-5 text-white" fill="white" />
             </div>
-            <span className="font-script text-2xl text-primary">PahadiMatch</span>
+            <img 
+              src="/pahadi_match_logo_mobile.png" 
+              alt="PahadiMatch" 
+              className="w-16 h-8 object-contain"
+            />
           </div>
         </div>
       </div>

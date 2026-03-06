@@ -68,13 +68,6 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
                 </motion.div>
               ))}
             </div>
-            
-            {/* Decorative Line */}
-            <div className="flex items-center justify-center gap-4 pt-4 lg:pt-6">
-              <div className="w-16 lg:w-20 h-0.5 bg-gradient-to-r from-transparent to-primary-200" />
-              <div className="w-5 h-5 lg:w-6 lg:h-6 text-primary">❤️</div>
-              <div className="w-16 lg:w-20 h-0.5 bg-gradient-to-l from-transparent to-primary-200" />
-            </div>
           </motion.div>
         </div>
         
@@ -106,7 +99,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
               alt="PahadiMatch" 
               className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
             />
-            <span className="font-script text-2xl sm:text-3xl text-primary">PahadiMatch</span>
+            
           </div>
 
           {/* Title */}

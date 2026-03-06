@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Mail, Phone, Navigation, Globe } from "lucide-react";
+import { Mail, Phone, Navigation, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function PrivacyPage() {
@@ -12,12 +12,16 @@ export function PrivacyPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-script text-primary">
-                Pahadimatch
-              </span>
+              <img 
+                src="/pahadi_match_full.png" 
+                alt="PahadiMatch" 
+                className="w-20 h-10 hidden lg:block object-contain"
+              />
+              <img 
+                src="/pahadi_match_logo_mobile.png" 
+                alt="PahadiMatch" 
+                className="w-16 h-8 lg:hidden object-contain"
+              />
             </Link>
           </div>
         </div>
@@ -127,12 +131,19 @@ export function PrivacyPage() {
 
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-2xl font-script">
-                  Pahadimatch
-                </span>
+            <Link to="/" className="flex items-center gap-2">
+              <img 
+                src="/pahadi_match_full.png" 
+                alt="PahadiMatch" 
+                className="w-20 h-10 hidden lg:block object-contain"
+              />
+              <img 
+                src="/pahadi_match_logo_mobile.png" 
+                alt="PahadiMatch" 
+                className="w-16 h-8 lg:hidden object-contain"
+              />
+            </Link>
+        
               </div>
               <p className="text-white/80 text-sm">
                 Connecting hearts across Uttarakhand.
