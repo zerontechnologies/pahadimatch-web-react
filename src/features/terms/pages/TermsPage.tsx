@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Mail, Phone, Navigation, Globe } from "lucide-react";
+import { Mail, Phone, Navigation, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function TermsPage() {
