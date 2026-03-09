@@ -116,7 +116,7 @@ export function LandingPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="max-w-2xl mx-auto text-lg sm:text-xl text-text-secondary mb-8 lg:mb-10 leading-relaxed font-medium drop-shadow-sm"
             >
-              Connect with like-minded Kumaoni & Garhwali singles who share your values, traditions, and dreams. Experience matchmaking that understands our pahadi culture.
+              Connect with like-minded garhwali, kumaoni & jaunsari singles who share your values, traditions, and dreams. Experience matchmaking that understands our pahadi culture.
             </motion.p>
 
             <motion.div
