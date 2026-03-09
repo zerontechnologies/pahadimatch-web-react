@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -11,7 +10,14 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] gradient-hero relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden" style={{
+        backgroundImage: 'url("/auth_background.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        {/* Dark Overlay for Contrast */}
+        <div className="absolute inset-0 bg-black/40" />
         {/* Decorative Elements */}
         <div className="absolute inset-0 pattern-mandala opacity-50" />
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl" />
@@ -26,19 +32,20 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
           >
             {/* Logo */}
             <div className="flex items-center justify-center mb-4 lg:mb-6">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/30">
-                <Heart className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-white" fill="white" />
-              </div>
+              <img 
+                src="/pahadi_match_full.png" 
+                alt="PahadiMatch" 
+                className="w-32 h-16 lg:w-40 lg:h-20 xl:w-48 xl:h-24 object-contain"
+              />
             </div>
             
             {/* Brand Name */}
             <div className="space-y-2 lg:space-y-3">
-              <h1 className="font-script text-5xl lg:text-6xl xl:text-7xl text-primary leading-tight">
-                PahadiMatch
-              </h1>
-              <p className="font-display text-xl lg:text-2xl xl:text-3xl text-secondary">
-                Where Mountains Meet Hearts
-              </p>
+              <div className="backdrop-blur-sm bg-white/20 rounded-lg px-4 py-2">
+                <p className="font-display text-base lg:text-lg xl:text-xl text-white text-center">
+                  Where Mountains Meet Hearts
+                </p>
+              </div>
             </div>
             
             {/* Features */}
@@ -60,13 +67,6 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
                   <span className="text-xs lg:text-sm text-text-secondary">{item.desc}</span>
                 </motion.div>
               ))}
-            </div>
-            
-            {/* Decorative Line */}
-            <div className="flex items-center justify-center gap-4 pt-4 lg:pt-6">
-              <div className="w-16 lg:w-20 h-0.5 bg-gradient-to-r from-transparent to-primary-200" />
-              <Heart className="w-5 h-5 lg:w-6 lg:h-6 text-primary animate-heartbeat" />
-              <div className="w-16 lg:w-20 h-0.5 bg-gradient-to-l from-transparent to-primary-200" />
             </div>
           </motion.div>
         </div>
@@ -94,10 +94,12 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
         >
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/30">
-              <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="white" />
-            </div>
-            <span className="font-script text-2xl sm:text-3xl text-primary">PahadiMatch</span>
+            <img 
+              src="/pahadi_match_logo_mobile.png" 
+              alt="PahadiMatch" 
+              className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
+            />
+            
           </div>
 
           {/* Title */}

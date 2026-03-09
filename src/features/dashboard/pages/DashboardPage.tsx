@@ -168,14 +168,14 @@ export function DashboardPage() {
               Here's what's happening with your profile today
             </p>
           </div>
-          {!membershipData?.isPremium && (
+          {/* {!membershipData?.isPremium && (
             <Button variant="accent" asChild>
               <Link to="/membership">
                 <Crown className="w-4 h-4 mr-2" />
                 Upgrade to Premium
               </Link>
             </Button>
-          )}
+          )} */}
         </div>
       </motion.div>
 

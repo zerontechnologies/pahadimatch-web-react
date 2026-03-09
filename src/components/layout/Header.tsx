@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Heart, 
   Bell, 
   MessageSquare, 
   Search, 
@@ -70,10 +69,16 @@ export function Header() {
 
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-md">
-              <Heart className="w-5 h-5 text-white" fill="white" />
-            </div>
-            <span className="font-script text-2xl text-primary hidden sm:inline">PahadiMatch</span>
+            <img 
+              src="/pahadi_match_logo_mobile.png" 
+              alt="PahadiMatch" 
+              className="h-8 w-auto lg:hidden object-contain"
+            />
+            <img 
+              src="/pahadi_match_full.png" 
+              alt="PahadiMatch" 
+              className="h-10 w-auto hidden lg:block object-contain"
+            />
           </Link>
         </div>
 

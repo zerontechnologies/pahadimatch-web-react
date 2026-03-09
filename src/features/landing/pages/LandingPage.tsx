@@ -30,10 +30,16 @@ export function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-script text-primary">Pahadimatch</span>
+              <img 
+                src="/pahadi_match_logo_mobile.png" 
+                alt="PahadiMatch" 
+                className="h-8 w-auto lg:hidden object-contain"
+              />
+              <img 
+                src="/pahadi_match_full.png" 
+                alt="PahadiMatch" 
+                className="h-10 w-auto hidden lg:block object-contain"
+              />
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
@@ -65,11 +71,11 @@ export function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-20 overflow-hidden min-h-[600px] flex items-center">
-        {/* Ganesha Background Image */}
+        {/* Landing Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: 'url(/temple.png)'
+            backgroundImage: 'url(/landing_background.jpg)'
           }}
         ></div>
         {/* Gradient Overlay for better text readability */}
@@ -78,12 +84,12 @@ export function LandingPage() {
         <div className="absolute inset-0 pattern-mandala opacity-20"></div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
+          <div className="text-center">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-block mb-8"
+              className="inline-block mb-6 lg:mb-8"
             >
               <span className="bg-white/90 backdrop-blur-sm text-primary px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg border border-primary/20">
                 Trusted by 1000+ Pahadis
@@ -94,12 +100,12 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6 leading-tight"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight"
             >
               <span className="block text-text mb-2 drop-shadow-sm">
                 Find Your Soulmate from the
               </span>
-              <span className="block text-primary font-script text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-none drop-shadow-md">
+              <span className="block text-primary font-script text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-none drop-shadow-md">
                 Heart of Uttarakhand
               </span>
             </motion.h1>
@@ -108,7 +114,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="max-w-2xl mx-auto text-lg sm:text-xl text-text-secondary mb-10 leading-relaxed font-medium drop-shadow-sm"
+              className="max-w-2xl mx-auto text-lg sm:text-xl text-text-secondary mb-8 lg:mb-10 leading-relaxed font-medium drop-shadow-sm"
             >
               Connect with like-minded Kumaoni & Garhwali singles who share your values, traditions, and dreams. Experience matchmaking that understands our pahadi culture.
             </motion.p>
@@ -117,7 +123,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8"
             >
               <Button
                 size="lg"
@@ -465,10 +471,11 @@ export function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-2xl font-script">Pahadimatch</span>
+                <img 
+                  src="/pahadi_match_full.png" 
+                  alt="PahadiMatch" 
+                  className="h-8 object-contain"
+                />
               </div>
               <p className="text-white/80 text-sm mb-4">
                 Connecting hearts across the Himalayas. The trusted matrimony platform for Uttarakhand's Kumaoni and Garhwali communities.
@@ -498,12 +505,19 @@ export function LandingPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="/terms" className="hover:text-white transition-colors">
-                    Terms &amp; Conditions
+                  <a 
+                    href="/terms" 
+                    className="hover:text-white transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                     Terms &amp; Conditions
                   </a>
                 </li>
                 <li>
-                  <a href="/privacy" className="hover:text-white transition-colors">
+                  <a href="/privacy" className="hover:text-white transition-colors"
+                  target="_blank"
+                    rel="noopener noreferrer">
                     Privacy Policy
                   </a>
                 </li>
