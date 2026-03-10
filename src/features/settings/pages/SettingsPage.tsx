@@ -29,6 +29,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectCurrentUser, updateUser } from '@/store/slices/authSlice';
 import { addToast } from '@/store/slices/uiSlice';
 import { useChangePhoneMutation, useVerifyPhoneChangeMutation } from '@/store/api/authApi';
+import { PhoneInput } from '@/features/auth/components/PhoneInput';
 
 export function SettingsPage() {
   const dispatch = useAppDispatch();
@@ -345,13 +346,11 @@ export function SettingsPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-text-secondary">New Phone Number</label>
-                          <Input
+                          <PhoneInput
+                            label="New Phone Number"
                             value={newPhone}
-                            onChange={(e) => setNewPhone(e.target.value)}
-                            className="mt-1"
+                            onChange={setNewPhone}
                             disabled={phoneStep === 'verify' || isSendingPhoneOtp || isVerifyingPhone}
-                            placeholder="Enter new phone number"
                           />
                         </div>
                         {phoneStep === 'verify' && (
