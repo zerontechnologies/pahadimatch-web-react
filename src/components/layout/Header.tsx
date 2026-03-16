@@ -1,4 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useCallback, useState, useEffect } from 'react';
 import { 
   Bell, 
   MessageSquare, 
@@ -32,9 +33,11 @@ import { getInitials } from '@/lib/utils';
 
 export function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectCurrentUser);
   const { data: profile } = useGetOwnProfileQuery(undefined, { skip: !user });
+  const [searchQuery, setSearchQuery] = useState('');
   
   const { data: chatUnread } = useGetUnreadCountQuery(undefined, { pollingInterval: 30000 });
   const { data: notificationUnread } = useGetNotificationUnreadCountQuery(undefined, { pollingInterval: 30000 });
@@ -43,6 +46,33 @@ export function Header() {
   const unreadMessages = chatUnread?.data?.unreadCount || 0;
   const unreadNotifications = notificationUnread?.data?.unreadCount || 0;
   const isPremium = membership?.data?.isPremium || false;
+
+  // Clear search when route changes (but not when viewing profile page from search)
+  useEffect(() => {
+    // Don't clear if we're on a profile page (likely from search)
+    if (!location.pathname.startsWith('/profile/')) {
+      setSearchQuery('');
+    }
+  }, [location.pathname]);
+
+  // Debounce utility function
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
+  };
+
+  // Debounced search handler
+  const debouncedSearch = useCallback(
+    debounce((query: string) => {
+      if (query.trim()) {
+        navigate(`/profile/${query.trim()}`);
+      }
+    }, 300),
+    [navigate]
+  );
 
   const handleLogout = () => {
     dispatch(logout());
@@ -89,15 +119,12 @@ export function Header() {
             <input
               type="text"
               placeholder="Search by Profile ID..."
-              className="w-full h-10 pl-10 pr-4 rounded-full border border-border bg-champagne/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary transition-all"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const target = e.target as HTMLInputElement;
-                  if (target.value.trim()) {
-                    navigate(`/profile/${target.value.trim()}`);
-                  }
-                }
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                debouncedSearch(e.target.value);
               }}
+              className="w-full h-10 pl-10 pr-4 rounded-full border border-border bg-champagne/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary transition-all"
             />
           </div>
         </div>
